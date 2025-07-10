@@ -4,8 +4,8 @@ import { useState } from 'react'
 import { SessionContextProvider } from '@supabase/auth-helpers-react'
 import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import type { Session } from '@supabase/auth-helpers-nextjs'
-import type { Database } from '@/types/supabase'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase'
 
 export default function SupabaseProvider({
   children,
@@ -18,11 +18,14 @@ export default function SupabaseProvider({
     createBrowserSupabaseClient<Database>()
   )
 
-  // Override the type to satisfy SessionContextProvider
-  const typedSupabaseClient = supabaseClient as unknown as SupabaseClient<any, any, any>
+  // Recommended override to match SessionContextProvider expectations
+  const typedSupabaseClient = supabaseClient as unknown as SupabaseClient<any>
 
   return (
-    <SessionContextProvider supabaseClient={typedSupabaseClient} initialSession={initialSession}>
+    <SessionContextProvider
+      supabaseClient={typedSupabaseClient}
+      initialSession={initialSession}
+    >
       {children}
     </SessionContextProvider>
   )
