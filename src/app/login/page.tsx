@@ -9,6 +9,9 @@ export default function LoginPage() {
   const handleLogin = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'github',
+      options: {
+        redirectTo: `${location.origin}/dashboard`
+      }
     })
   }
 
