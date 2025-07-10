@@ -188,6 +188,8 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+// Extract just the actual schema, omitting __InternalSupabase
+export type TypedDatabase = Omit<Database, '__InternalSupabase'>
 
 export const Constants = {
   public: {
