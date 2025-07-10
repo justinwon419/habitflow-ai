@@ -18,8 +18,14 @@ export default function SupabaseProvider({
     createBrowserSupabaseClient<Database>()
   )
 
-  // Recommended override to match SessionContextProvider expectations
-  const typedSupabaseClient = supabaseClient as unknown as SupabaseClient<any>
+  // Provide fully typed generics instead of "any"
+  type TypedSupabaseClient = SupabaseClient<
+    Database,
+    'public',
+    Database['public']
+  >
+
+  const typedSupabaseClient = supabaseClient as TypedSupabaseClient
 
   return (
     <SessionContextProvider
