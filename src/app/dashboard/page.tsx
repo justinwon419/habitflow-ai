@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useRouter } from 'next/navigation'
+import { createClientComponentClient, Session } from '@supabase/auth-helpers-nextjs'
 
 type Habit = {
   id: string
@@ -11,56 +12,45 @@ type Habit = {
 
 export default function DashboardPage() {
   const supabase = createClientComponentClient()
+  const router = useRouter()
+  const [session, setSession] = useState<Session | null>(null)
+  const [loading, setLoading] = useState(true)
   const [habits, setHabits] = useState<Habit[]>([])
   const [newHabit, setNewHabit] = useState('')
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchHabits() {
-      setLoading(true)
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
-        setHabits([])
+        router.push('/login')
+      } else {
+        setSession(session)
         setLoading(false)
-        return
+        fetchHabits(session.user.id)
       }
+    })
+  }, [router, supabase])
 
-      const user_id = session.user.id
+  async function fetchHabits(user_id: string) {
+    const { data, error } = await supabase
+      .from('habits')
+      .select('*')
+      .eq('user_id', user_id)
+      .order('created_at', { ascending: false })
 
-      const { data, error } = await supabase
-        .from('habits')
-        .select('*')
-        .eq('user_id', user_id)
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        console.error('Error fetching habits:', error)
-      } else if (data) {
-        setHabits(data)
-      }
-      setLoading(false)
+    if (error) {
+      console.error('Error fetching habits:', error)
+    } else if (data) {
+      setHabits(data)
     }
-
-    fetchHabits()
-  }, [])
+  }
 
   async function handleAddHabit() {
     if (!newHabit.trim()) return
+    if (!session) return
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    const user_id = session?.user.id
-    if (!user_id) {
-      console.error('No user session found')
-      return
-    }
-
-    const { data, error } = await supabase.from('habits').insert([{ title: newHabit, user_id }])
+    const { data, error } = await supabase
+      .from('habits')
+      .insert([{ title: newHabit, user_id: session.user.id }])
 
     if (error) {
       console.error('Error adding habit:', error)
@@ -70,28 +60,24 @@ export default function DashboardPage() {
     }
   }
 
+  if (loading) return <p>Loading...</p>
+
   return (
     <div>
-      {loading ? (
-        <p>Loading habits...</p>
-      ) : (
-        <>
-          <ul>
-            {habits.map((habit) => (
-              <li key={habit.id}>
-                {habit.title} (Created at: {new Date(habit.created_at).toLocaleDateString()})
-              </li>
-            ))}
-          </ul>
-          <input
-            type="text"
-            placeholder="New habit"
-            value={newHabit}
-            onChange={(e) => setNewHabit(e.target.value)}
-          />
-          <button onClick={handleAddHabit}>Add Habit</button>
-        </>
-      )}
+      <ul>
+        {habits.map((habit) => (
+          <li key={habit.id}>
+            {habit.title} (Created at: {new Date(habit.created_at).toLocaleDateString()})
+          </li>
+        ))}
+      </ul>
+      <input
+        type="text"
+        placeholder="New habit"
+        value={newHabit}
+        onChange={(e) => setNewHabit(e.target.value)}
+      />
+      <button onClick={handleAddHabit}>Add Habit</button>
     </div>
   )
 }
