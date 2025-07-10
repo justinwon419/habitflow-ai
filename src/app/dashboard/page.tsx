@@ -20,15 +20,17 @@ export default function DashboardPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
+        console.log('Session:', session)  // <-- add this line
+        if (!session) {
         router.push('/login')
-      } else {
+        } else {
         setSession(session)
         setLoading(false)
         fetchHabits(session.user.id)
-      }
+        }
     })
   }, [router, supabase])
+
 
   async function fetchHabits(user_id: string) {
     const { data, error } = await supabase
