@@ -18,10 +18,12 @@ export default function DashboardLayout({
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: 'auto' }}>
+    <div style={{ padding: '20px', maxWidth: '800px', margin: 'auto' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>HabitFlow Dashboard</h1>
-        <button onClick={handleLogout}>Logout</button>
+        <h1 style={{fontSize: '24px', fontWeight: 'bold'}}>HabitFlow Dashboard</h1>
+        <button
+          style={{backgroundColor: '#F0F0F0', padding: '8px', borderRadius: '8px'}} 
+          onClick={handleLogout}>Logout</button>
       </header>
       <main>{children}</main>
     </div>

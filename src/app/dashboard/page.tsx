@@ -169,24 +169,45 @@ export default function DashboardPage() {
     }
   }
 
+  /**
+ * Returns the count of consecutive days up through today
+ * that the given habit was completed.
+ */
+  function getCurrentStreak(habitId: string) {
+    let streak = 0
+
+    // Walk backwards from today through last7Days (which you already have)
+    // If you want to look further back, you could extend this array dynamically
+    for (let i = last7Days.length - 1; i >= 0; i--) {
+      const day = last7Days[i]
+      if (isHabitCompletedOn(habitId, day)) {
+        streak++
+      } else {
+        break // stop as soon as we hit a day not completed
+      }
+    }
+
+    return streak
+  }
+
   if (!session) {
     return <p>Please log in to view your dashboard.</p>
   }
 
   return (
-    <div style={{ padding: 20, maxWidth: 600, margin: 'auto' }}>
-      <h1>Your Habits</h1>
+    <div style={{ paddingTop: 20, maxWidth: 800, margin: 'auto' }}>
+      <h1>New habit</h1>
 
-      <div>
+      <div style={{display: 'flex', gap: '16'}}>
         <input
           type="text"
-          placeholder="New habit title"
+          placeholder="Enter a brief habit description"
           value={newHabitTitle}
           onChange={e => setNewHabitTitle(e.target.value)}
-          style={{ padding: 8, width: '80%' }}
+          style={{ width: '100%', padding: 8, backgroundColor: 'white', border: '1px solid #D9D9D9', borderRadius: 8, }}
         />
-        <button onClick={addHabit} style={{ padding: 8, marginLeft: 8 }}>
-          Add Habit
+        <button onClick={addHabit} style={{ width: '20%', padding: 8, marginLeft: 8, backgroundColor: '#367BDB', borderRadius: 8, color: 'white' }}>
+          Add habit
         </button>
       </div>
 
@@ -202,7 +223,7 @@ export default function DashboardPage() {
                 type="checkbox"
                 checked={isHabitCompleted(habit.id)}
                 onChange={() => toggleCompletion(habit.id)}
-                style={{ marginRight: 10 }}
+                style={{ marginRight: 10, backgroundColor: '#367BDB' }}
               />
 
               {habit.isEditing ? (
@@ -227,7 +248,14 @@ export default function DashboardPage() {
                 </>
               ) : (
                 <>
-                  <span style={{ flexGrow: 1 }}>{habit.title}</span>
+                  <div style={{ flexGrow: 1 }}>
+                    <strong>{habit.title}</strong>
+                    <div style={{ fontSize: '0.8em', color: '#555' }}>
+                      Streak: {getCurrentStreak(habit.id)} day
+                      {getCurrentStreak(habit.id) === 1 ? '' : 's'}
+                    </div>
+                  </div>
+
                   <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
                     {last7Days.map(date => (
                       <div
@@ -237,16 +265,16 @@ export default function DashboardPage() {
                           width: 16,
                           height: 16,
                           borderRadius: '50%',
-                          backgroundColor: isHabitCompletedOn(habit.id, date) ? 'green' : '#ccc',
+                          backgroundColor: isHabitCompletedOn(habit.id, date) ? 'green' : '#F0F0F0',
                         }}
                       />
                     ))}
                   </div>
 
-                  <button onClick={() => startEdit(habit.id)} style={{ marginLeft: 10 }}>
+                  <button onClick={() => startEdit(habit.id)} style={{ marginLeft: 16 }}>
                     Edit
                   </button>
-                  <button onClick={() => deleteHabit(habit.id)} style={{ marginLeft: 4, color: 'red' }}>
+                  <button onClick={() => deleteHabit(habit.id)} style={{ marginLeft: 16, color: 'red' }}>
                     Delete
                   </button>
                 </>
