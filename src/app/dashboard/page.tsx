@@ -2,38 +2,56 @@
 
 import { useState, useEffect } from 'react'
 import { useSupabaseClient, useSession } from '@supabase/auth-helpers-react'
+import { format, parseISO, subDays } from 'date-fns'
+import { Database } from '@/types/supabase'
 
-type Habit = {
-  id: string
-  title: string
-  created_at: string
+type Habit = Database['public']['Tables']['habits']['Row'] & {
   isEditing?: boolean
   editTitle?: string
 }
+type Completion = Database['public']['Tables']['habit_completions']['Row']
 
 export default function DashboardPage() {
-  const supabase = useSupabaseClient()
+  const supabase = useSupabaseClient<Database>()
   const session = useSession()
 
   const [habits, setHabits] = useState<Habit[]>([])
+  const [completions, setCompletions] = useState<Completion[]>([])
   const [newHabitTitle, setNewHabitTitle] = useState('')
   const [loading, setLoading] = useState(true)
+
+  const today = format(new Date(), 'yyyy-MM-dd')
+  // Generate last 7 days including today
+  const last7Days = Array.from({ length: 7 }, (_, i) =>
+    format(subDays(new Date(), i), 'yyyy-MM-dd')
+  ).reverse()
+
+
 
   async function fetchHabits() {
     if (!session?.user) return
 
     setLoading(true)
-    const { data, error } = await supabase
+
+    const { data: habitsData, error: habitsError } = await supabase
       .from('habits')
       .select('*')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
 
-    if (error) {
-      alert('Error loading habits: ' + error.message)
+    const { data: completionsData, error: completionsError } = await supabase
+      .from('habit_completions')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .in('date', last7Days)
+
+    if (habitsError || completionsError) {
+      alert('Error loading data')
     } else {
-      setHabits(data || [])
+      setHabits(habitsData || [])
+      setCompletions(completionsData || [])
     }
+
     setLoading(false)
   }
 
@@ -42,8 +60,7 @@ export default function DashboardPage() {
   }, [session])
 
   async function addHabit() {
-    if (!newHabitTitle.trim()) return alert('Please enter a habit title')
-    if (!session?.user) return alert('Not logged in')
+    if (!newHabitTitle.trim() || !session?.user) return
 
     const { error } = await supabase.from('habits').insert([
       {
@@ -57,7 +74,19 @@ export default function DashboardPage() {
       alert('Error adding habit: ' + error.message)
     } else {
       setNewHabitTitle('')
-      await fetchHabits()
+      fetchHabits()
+    }
+  }
+
+  async function deleteHabit(id: string) {
+    if (!confirm('Delete this habit?')) return
+
+    const { error } = await supabase.from('habits').delete().eq('id', id)
+
+    if (error) {
+      alert('Error deleting habit: ' + error.message)
+    } else {
+      setHabits(habits.filter(h => h.id !== id))
     }
   }
 
@@ -74,52 +103,69 @@ export default function DashboardPage() {
   }
 
   async function saveHabit(id: string) {
-    if (!session?.user) {
-      alert('Not logged in')
-      return
-    }
-
     const habit = habits.find(h => h.id === id)
-    if (!habit || !habit.editTitle?.trim()) {
-      alert('Title cannot be empty')
-      return
-    }
+    if (!habit || !habit.editTitle?.trim()) return
 
     const { error } = await supabase
       .from('habits')
       .update({ title: habit.editTitle })
       .eq('id', id)
-      .eq('user_id', session.user.id)
 
     if (error) {
-      alert('Failed to update habit: ' + error.message)
+      alert('Error updating habit: ' + error.message)
     } else {
       setHabits(habits.map(h =>
-        h.id === id ? { ...h, title: habit.editTitle!, isEditing: false, editTitle: undefined } : h
+        h.id === id
+          ? { ...h, title: habit.editTitle!, isEditing: false, editTitle: undefined }
+          : h
       ))
-      await fetchHabits()
     }
   }
 
-  async function deleteHabit(id: string) {
-    if (!session?.user) {
-      alert('Not logged in')
-      return
-    }
+  function isHabitCompleted(habitId: string) {
+    return completions.some(c => c.habit_id === habitId)
+  }
 
-    if (!confirm('Are you sure you want to delete this habit?')) return
+  function isHabitCompletedOn(habitId: string, date: string) {
+    return completions.some(c => {
+      if (c.habit_id !== habitId) return false
+      // Parse the timestamp string, then format to 'yyyy-MM-dd' to compare date only
+      const completionDateOnly = format(parseISO(c.date), 'yyyy-MM-dd')
+      return completionDateOnly === date
+    })
+  }
 
-    const { error } = await supabase
-      .from('habits')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', session.user.id)
 
-    if (error) {
-      alert('Failed to delete habit: ' + error.message)
+  async function toggleCompletion(habitId: string) {
+    if (!session?.user) return
+
+    const existing = completions.find(c => c.habit_id === habitId)
+
+    if (existing) {
+      const { error } = await supabase
+        .from('habit_completions')
+        .delete()
+        .eq('id', existing.id)
+
+      if (!error) {
+        setCompletions(completions.filter(c => c.id !== existing.id))
+      }
     } else {
-      setHabits(habits.filter(h => h.id !== id))
-      await fetchHabits()
+      const { data, error } = await supabase
+        .from('habit_completions')
+        .insert([
+          {
+            habit_id: habitId,
+            user_id: session.user.id,
+            date: today,
+          },
+        ])
+        .select()
+        .single()
+
+      if (!error && data) {
+        setCompletions([...completions, data])
+      }
     }
   }
 
@@ -149,9 +195,16 @@ export default function DashboardPage() {
       ) : habits.length === 0 ? (
         <p>You have no habits yet.</p>
       ) : (
-        <ul>
+        <ul style={{ marginTop: 20 }}>
           {habits.map(habit => (
-            <li key={habit.id} style={{ marginBottom: 10 }}>
+            <li key={habit.id} style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+              <input
+                type="checkbox"
+                checked={isHabitCompleted(habit.id)}
+                onChange={() => toggleCompletion(habit.id)}
+                style={{ marginRight: 10 }}
+              />
+
               {habit.isEditing ? (
                 <>
                   <input
@@ -174,18 +227,26 @@ export default function DashboardPage() {
                 </>
               ) : (
                 <>
-                  {habit.title}{' '}
-                  <small>({new Date(habit.created_at).toLocaleDateString()})</small>
-                  <button
-                    onClick={() => startEdit(habit.id)}
-                    style={{ marginLeft: 10 }}
-                  >
+                  <span style={{ flexGrow: 1 }}>{habit.title}</span>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                    {last7Days.map(date => (
+                      <div
+                        key={date}
+                        title={date}
+                        style={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: '50%',
+                          backgroundColor: isHabitCompletedOn(habit.id, date) ? 'green' : '#ccc',
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  <button onClick={() => startEdit(habit.id)} style={{ marginLeft: 10 }}>
                     Edit
                   </button>
-                  <button
-                    onClick={() => deleteHabit(habit.id)}
-                    style={{ marginLeft: 4, color: 'red' }}
-                  >
+                  <button onClick={() => deleteHabit(habit.id)} style={{ marginLeft: 4, color: 'red' }}>
                     Delete
                   </button>
                 </>

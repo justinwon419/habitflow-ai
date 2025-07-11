@@ -35,6 +35,38 @@ export type Database = {
         }
         Relationships: []
       }
+      habit_completions: {
+        Row: {
+          created_at: string | null
+          date: string
+          habit_id: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          habit_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          habit_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_completions_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       habits: {
         Row: {
           created_at: string | null
@@ -188,8 +220,6 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
-// Extract just the actual schema, omitting __InternalSupabase
-export type TypedDatabase = Omit<Database, '__InternalSupabase'>
 
 export const Constants = {
   public: {
