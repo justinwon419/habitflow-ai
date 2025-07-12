@@ -290,7 +290,7 @@ export default function DashboardPage() {
                         ))}
                       </div>
                       <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-                        {weekDays.map((date, i) => (
+                        {weekDays.map((date) => (
                           <div
                             key={date}
                             title={new Date(date).toLocaleDateString(undefined, { weekday: 'short' })}
