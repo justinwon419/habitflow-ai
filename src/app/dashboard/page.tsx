@@ -229,9 +229,19 @@ export default function DashboardPage() {
         
 
         {loading ? (
-          <p>Loading...</p>
+          <p 
+            style={{
+             padding: "16px" 
+            }}
+          >
+            Loading...</p>
         ) : habits.length === 0 ? (
-          <p>You have no habits yet.</p>
+          <p
+            style={{
+             padding: "16px" 
+            }}
+          >  
+            You have no habits yet.</p>
         ) : (
           <ul style={{ marginTop: 20}}>
             {habits.map(habit => (
