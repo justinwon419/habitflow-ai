@@ -266,12 +266,36 @@ export default function DashboardPage() {
                           h.id === habit.id ? { ...h, editTitle: newTitle } : h
                         ))
                       }}
-                      style={{ padding: 4, width: '60%' }}
+                      style={{
+                        width: '100%',
+                        padding: 8,
+                        backgroundColor: 'white',
+                        border: '1px solid #D9D9D9',
+                        borderRadius: 8,
+                      }}
                     />
-                    <button onClick={() => saveHabit(habit.id)} style={{ marginLeft: 8 }}>
+                    <button 
+                      onClick={() => saveHabit(habit.id)} 
+                      style={{ 
+                        marginLeft: 16, 
+                        width: '64px',
+                        padding: 8,
+                        backgroundColor: '#367BDB',
+                        borderRadius: 8,
+                        color: 'white',
+                        }}>
                       Save
                     </button>
-                    <button onClick={() => cancelEdit(habit.id)} style={{ marginLeft: 4 }}>
+                    <button 
+                      onClick={() => cancelEdit(habit.id)} 
+                      style={{ 
+                        marginLeft: 16, 
+                        width: '64px',
+                        padding: 8,
+                        backgroundColor: '#F0F0F0',
+                        borderRadius: 8,
+                        color: 'red',
+                        }}>
                       Cancel
                     </button>
                   </>
@@ -306,10 +330,27 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    <button onClick={() => startEdit(habit.id)} style={{ marginLeft: 16 }}>
+                    <button 
+                      onClick={() => startEdit(habit.id)} 
+                      style={{ 
+                        marginLeft: 16, 
+                        width: '64px',
+                        padding: 8,
+                        backgroundColor: '#F0F0F0',
+                        borderRadius: 8,
+                        color: 'black',
+                        }}>
                       Edit
                     </button>
-                    <button onClick={() => deleteHabit(habit.id)} style={{ marginLeft: 16, color: 'red' }}>
+                    <button 
+                      onClick={() => deleteHabit(habit.id)} 
+                      style={{ marginLeft: 16, 
+                        width: '64px',
+                        padding: 8,
+                        backgroundColor: '#F0F0F0',
+                        borderRadius: 8,
+                        color: 'red'
+                        }}>
                       Delete
                     </button>
                   </>
