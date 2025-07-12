@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSupabaseClient, useSession } from '@supabase/auth-helpers-react'
-import { format, parseISO, subDays } from 'date-fns'
+import { format, parseISO, startOfWeek, addDays, isToday } from 'date-fns'
 import { Database } from '@/types/supabase'
 
 type Habit = Database['public']['Tables']['habits']['Row'] & {
@@ -21,12 +21,13 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
 
   const today = format(new Date(), 'yyyy-MM-dd')
-  // Generate last 7 days including today
-  const last7Days = Array.from({ length: 7 }, (_, i) =>
-    format(subDays(new Date(), i), 'yyyy-MM-dd')
-  ).reverse()
 
+  const startOfThisWeek = startOfWeek(new Date(), { weekStartsOn: 0 }) // Sunday
+  const weekDays = Array.from({ length: 7 }, (_, i) =>
+    format(addDays(startOfThisWeek, i), 'yyyy-MM-dd')
+  )
 
+  const weekDayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 
   async function fetchHabits() {
     if (!session?.user) return
@@ -43,7 +44,7 @@ export default function DashboardPage() {
       .from('habit_completions')
       .select('*')
       .eq('user_id', session.user.id)
-      .in('date', last7Days)
+      .in('date', weekDays)
 
     if (habitsError || completionsError) {
       alert('Error loading data')
@@ -122,24 +123,18 @@ export default function DashboardPage() {
     }
   }
 
-  function isHabitCompleted(habitId: string) {
-    return completions.some(c => c.habit_id === habitId)
-  }
-
   function isHabitCompletedOn(habitId: string, date: string) {
     return completions.some(c => {
       if (c.habit_id !== habitId) return false
-      // Parse the timestamp string, then format to 'yyyy-MM-dd' to compare date only
       const completionDateOnly = format(parseISO(c.date), 'yyyy-MM-dd')
       return completionDateOnly === date
     })
   }
 
-
   async function toggleCompletion(habitId: string) {
     if (!session?.user) return
 
-    const existing = completions.find(c => c.habit_id === habitId)
+    const existing = completions.find(c => c.habit_id === habitId && format(parseISO(c.date), 'yyyy-MM-dd') === today)
 
     if (existing) {
       const { error } = await supabase
@@ -169,24 +164,16 @@ export default function DashboardPage() {
     }
   }
 
-  /**
- * Returns the count of consecutive days up through today
- * that the given habit was completed.
- */
   function getCurrentStreak(habitId: string) {
     let streak = 0
-
-    // Walk backwards from today through last7Days (which you already have)
-    // If you want to look further back, you could extend this array dynamically
-    for (let i = last7Days.length - 1; i >= 0; i--) {
-      const day = last7Days[i]
+    for (let i = weekDays.length - 1; i >= 0; i--) {
+      const day = weekDays[i]
       if (isHabitCompletedOn(habitId, day)) {
         streak++
       } else {
-        break // stop as soon as we hit a day not completed
+        break
       }
     }
-
     return streak
   }
 
@@ -195,94 +182,142 @@ export default function DashboardPage() {
   }
 
   return (
-    <div style={{ paddingTop: 20, maxWidth: 800, margin: 'auto' }}>
-      <h1>New habit</h1>
+    <div 
+      style={{ 
+        padding: 20, 
+        maxWidth: 800, 
+        margin: 'auto', 
+        backgroundColor:"#F0F0F0", 
+        paddingBottom:"8px", 
+        borderBottomLeftRadius:"8px",
+        borderBottomRightRadius:"8px"  
+        }}>
+        <header style = {{backgroundColor:"#FFFFFF", padding: "16px", borderRadius: "8px"}}>
+          <h1 style= {{fontWeight:"bold"}}>
+            New habit
+          </h1>
 
-      <div style={{display: 'flex', gap: '16'}}>
-        <input
-          type="text"
-          placeholder="Enter a brief habit description"
-          value={newHabitTitle}
-          onChange={e => setNewHabitTitle(e.target.value)}
-          style={{ width: '100%', padding: 8, backgroundColor: 'white', border: '1px solid #D9D9D9', borderRadius: 8, }}
-        />
-        <button onClick={addHabit} style={{ width: '20%', padding: 8, marginLeft: 8, backgroundColor: '#367BDB', borderRadius: 8, color: 'white' }}>
-          Add habit
-        </button>
-      </div>
+          <div style={{ display: 'flex', gap: 16,paddingTop:"4px"}}>
+            <input
+              type="text"
+              placeholder="Enter a brief habit description"
+              value={newHabitTitle}
+              onChange={e => setNewHabitTitle(e.target.value)}
+              style={{
+                width: '100%',
+                padding: 8,
+                backgroundColor: 'white',
+                border: '1px solid #D9D9D9',
+                borderRadius: 8,
+              }}
+            />
+            <button
+              onClick={addHabit}
+              style={{
+                width: '20%',
+                padding: 8,
+                marginLeft: 8,
+                backgroundColor: '#367BDB',
+                borderRadius: 8,
+                color: 'white',
+              }}
+            >
+              Add habit
+            </button>
+          </div>
+        </header>
+        
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : habits.length === 0 ? (
-        <p>You have no habits yet.</p>
-      ) : (
-        <ul style={{ marginTop: 20 }}>
-          {habits.map(habit => (
-            <li key={habit.id} style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
-              <input
-                type="checkbox"
-                checked={isHabitCompleted(habit.id)}
-                onChange={() => toggleCompletion(habit.id)}
-                style={{ marginRight: 10, backgroundColor: '#367BDB' }}
-              />
+        {loading ? (
+          <p>Loading...</p>
+        ) : habits.length === 0 ? (
+          <p>You have no habits yet.</p>
+        ) : (
+          <ul style={{ marginTop: 20}}>
+            {habits.map(habit => (
+              <li
+                key={habit.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  marginBottom: 20,
+                  borderBottom: '1px solid #eee',
+                  backgroundColor: "white",
+                  padding: "16px",
+                  paddingBottom: "8px",
+                  borderRadius: "8px"
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={isHabitCompletedOn(habit.id, today)}
+                  onChange={() => toggleCompletion(habit.id)}
+                  style={{ marginRight: 10 }}
+                />
 
-              {habit.isEditing ? (
-                <>
-                  <input
-                    type="text"
-                    value={habit.editTitle}
-                    onChange={e => {
-                      const newTitle = e.target.value
-                      setHabits(habits.map(h =>
-                        h.id === habit.id ? { ...h, editTitle: newTitle } : h
-                      ))
-                    }}
-                    style={{ padding: 4, width: '60%' }}
-                  />
-                  <button onClick={() => saveHabit(habit.id)} style={{ marginLeft: 8 }}>
-                    Save
-                  </button>
-                  <button onClick={() => cancelEdit(habit.id)} style={{ marginLeft: 4 }}>
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div style={{ flexGrow: 1 }}>
-                    <strong>{habit.title}</strong>
-                    <div style={{ fontSize: '0.8em', color: '#555' }}>
-                      Streak: {getCurrentStreak(habit.id)} day
-                      {getCurrentStreak(habit.id) === 1 ? '' : 's'}
+                {habit.isEditing ? (
+                  <>
+                    <input
+                      type="text"
+                      value={habit.editTitle}
+                      onChange={e => {
+                        const newTitle = e.target.value
+                        setHabits(habits.map(h =>
+                          h.id === habit.id ? { ...h, editTitle: newTitle } : h
+                        ))
+                      }}
+                      style={{ padding: 4, width: '60%' }}
+                    />
+                    <button onClick={() => saveHabit(habit.id)} style={{ marginLeft: 8 }}>
+                      Save
+                    </button>
+                    <button onClick={() => cancelEdit(habit.id)} style={{ marginLeft: 4 }}>
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ flexGrow: 1 }}>
+                      <strong>{habit.title}</strong>
+                      <div style={{ fontSize: '0.8em', color: '#555' }}>
+                        Streak: {getCurrentStreak(habit.id)} day{getCurrentStreak(habit.id) === 1 ? '' : 's'}
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, marginTop: 8, alignItems: 'center' }}>
+                        {weekDayLabels.map((label, idx) => (
+                          <span key={idx} style={{ fontSize: 12, width: 16, textAlign: 'center' }}>
+                            {label}
+                          </span>
+                        ))}
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                        {weekDays.map((date, i) => (
+                          <div
+                            key={date}
+                            title={new Date(date).toLocaleDateString(undefined, { weekday: 'short' })}
+                            style={{
+                              width: 16,
+                              height: 16,
+                              borderRadius: '50%',
+                              backgroundColor: isHabitCompletedOn(habit.id, date) ? 'green' : '#F0F0F0',
+                              border: isToday(new Date(date)) ? '2px solid #367BDB' : 'none',
+                            }}
+                          />
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-                    {last7Days.map(date => (
-                      <div
-                        key={date}
-                        title={date}
-                        style={{
-                          width: 16,
-                          height: 16,
-                          borderRadius: '50%',
-                          backgroundColor: isHabitCompletedOn(habit.id, date) ? 'green' : '#F0F0F0',
-                        }}
-                      />
-                    ))}
-                  </div>
-
-                  <button onClick={() => startEdit(habit.id)} style={{ marginLeft: 16 }}>
-                    Edit
-                  </button>
-                  <button onClick={() => deleteHabit(habit.id)} style={{ marginLeft: 16, color: 'red' }}>
-                    Delete
-                  </button>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+                    <button onClick={() => startEdit(habit.id)} style={{ marginLeft: 16 }}>
+                      Edit
+                    </button>
+                    <button onClick={() => deleteHabit(habit.id)} style={{ marginLeft: 16, color: 'red' }}>
+                      Delete
+                    </button>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
     </div>
   )
 }
