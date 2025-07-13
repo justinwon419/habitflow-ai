@@ -196,23 +196,28 @@ export default function DashboardPage() {
       .map(c => format(parseISO(c.date), 'yyyy-MM-dd'))
 
     let streak = 0
-    const dateCursor = new Date()
+    let dateCursor = new Date()
 
-    // If yesterday is not completed, streak is broken
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    if (!completedDates.includes(format(yesterday, 'yyyy-MM-dd'))) {
-      return 0
-    }
+    // Always include today if it's completed
+    while (true) {
+      const cursorDate = format(dateCursor, 'yyyy-MM-dd')
+      const isCompleted = completedDates.includes(cursorDate)
 
-    // Count backward from yesterday
-    while (completedDates.includes(format(dateCursor, 'yyyy-MM-dd'))) {
-      streak++
+      if (isCompleted) {
+        streak++
+      } else {
+        // Only break if the missed day is **before today**
+        if (cursorDate < today) {
+          break
+        }
+      }
+
       dateCursor.setDate(dateCursor.getDate() - 1)
     }
 
     return streak
   }
+
 
   if (!session) {
     return <p>Please log in to view your dashboard.</p>
