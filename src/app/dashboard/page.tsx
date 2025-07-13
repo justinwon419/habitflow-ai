@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSupabaseClient, useSession } from '@supabase/auth-helpers-react'
-import { format, parseISO, startOfWeek, addDays, isToday } from 'date-fns'
+import { format, parseISO, startOfWeek, addDays } from 'date-fns'
 import { Database } from '@/types/supabase'
 
 import { useRouter } from 'next/navigation'
@@ -35,6 +35,33 @@ export default function DashboardPage() {
 
   const weekDayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 
+  const fetchHabits = useCallback(async () => {
+    if (!session?.user) return
+
+    setLoading(true)
+
+    const { data: habitsData, error: habitsError } = await supabase
+      .from('habits')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false })
+
+    const { data: completionsData, error: completionsError } = await supabase
+      .from('habit_completions')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('date', { ascending: false })
+
+    if (habitsError || completionsError) {
+      alert('Error loading data')
+    } else {
+      setHabits(habitsData || [])
+      setCompletions(completionsData || [])
+    }
+
+    setLoading(false)
+  }, [session, supabase])
+
   useEffect(() => {
     async function checkGoalsAndFetchHabits() {
       if (!session?.user) return
@@ -57,34 +84,7 @@ export default function DashboardPage() {
     }
 
     checkGoalsAndFetchHabits()
-  }, [session])
-
-  async function fetchHabits() {
-    if (!session?.user) return
-
-    setLoading(true)
-
-    const { data: habitsData, error: habitsError } = await supabase
-      .from('habits')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .order('created_at', { ascending: false })
-
-    const { data: completionsData, error: completionsError } = await supabase
-      .from('habit_completions')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .order('date', { ascending: false }) // Get all completions for streak calc
-
-    if (habitsError || completionsError) {
-      alert('Error loading data')
-    } else {
-      setHabits(habitsData || [])
-      setCompletions(completionsData || [])
-    }
-
-    setLoading(false)
-  }
+  }, [session, fetchHabits, router, supabase])
 
   async function addHabit() {
     if (!newHabitTitle.trim() || !session?.user) return
@@ -196,13 +196,16 @@ export default function DashboardPage() {
       .map(c => format(parseISO(c.date), 'yyyy-MM-dd'))
 
     let streak = 0
-    let dateCursor = new Date()
+    const dateCursor = new Date()
 
-    // If today is not completed, move to yesterday
-    if (!completedDates.includes(format(dateCursor, 'yyyy-MM-dd'))) {
-      dateCursor.setDate(dateCursor.getDate() - 1)
+    // If yesterday is not completed, streak is broken
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    if (!completedDates.includes(format(yesterday, 'yyyy-MM-dd'))) {
+      return 0
     }
 
+    // Count backward from yesterday
     while (completedDates.includes(format(dateCursor, 'yyyy-MM-dd'))) {
       streak++
       dateCursor.setDate(dateCursor.getDate() - 1)
@@ -210,11 +213,10 @@ export default function DashboardPage() {
 
     return streak
   }
-  
+
   if (!session) {
     return <p>Please log in to view your dashboard.</p>
   }
-
   return (
     <div 
       style={{ 
