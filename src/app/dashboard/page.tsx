@@ -196,7 +196,7 @@ export default function DashboardPage() {
       .map(c => format(parseISO(c.date), 'yyyy-MM-dd'))
 
     let streak = 0
-    let dateCursor = new Date()
+    const dateCursor = new Date()
 
     // Always include today if it's completed
     while (true) {
