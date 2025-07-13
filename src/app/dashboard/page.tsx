@@ -28,7 +28,7 @@ export default function DashboardPage() {
 
   const today = format(new Date(), 'yyyy-MM-dd')
 
-  const startOfThisWeek = startOfWeek(new Date(), { weekStartsOn: 0 }) // Sunday
+  const startOfThisWeek = startOfWeek(new Date(), { weekStartsOn: 0 })
   const weekDays = Array.from({ length: 7 }, (_, i) =>
     format(addDays(startOfThisWeek, i), 'yyyy-MM-dd')
   )
@@ -43,7 +43,7 @@ export default function DashboardPage() {
         .from('goals')
         .select('*')
         .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false }) // just in case there are multiple
+        .order('created_at', { ascending: false })
         .limit(1)
         .single()
 
@@ -54,7 +54,6 @@ export default function DashboardPage() {
 
       setActiveGoal(goal)
       await fetchHabits()
-
     }
 
     checkGoalsAndFetchHabits()
@@ -75,7 +74,7 @@ export default function DashboardPage() {
       .from('habit_completions')
       .select('*')
       .eq('user_id', session.user.id)
-      .in('date', weekDays)
+      .order('date', { ascending: false }) // Get all completions for streak calc
 
     if (habitsError || completionsError) {
       alert('Error loading data')
@@ -192,21 +191,30 @@ export default function DashboardPage() {
   }
 
   function getCurrentStreak(habitId: string) {
+    const completedDates = completions
+      .filter(c => c.habit_id === habitId)
+      .map(c => format(parseISO(c.date), 'yyyy-MM-dd'))
+
     let streak = 0
-    for (let i = weekDays.length - 1; i >= 0; i--) {
-      const day = weekDays[i]
-      if (isHabitCompletedOn(habitId, day)) {
-        streak++
-      } else {
-        break
-      }
+    let dateCursor = new Date()
+
+    // If today is not completed, move to yesterday
+    if (!completedDates.includes(format(dateCursor, 'yyyy-MM-dd'))) {
+      dateCursor.setDate(dateCursor.getDate() - 1)
     }
+
+    while (completedDates.includes(format(dateCursor, 'yyyy-MM-dd'))) {
+      streak++
+      dateCursor.setDate(dateCursor.getDate() - 1)
+    }
+
     return streak
   }
-
+  
   if (!session) {
     return <p>Please log in to view your dashboard.</p>
   }
+
   return (
     <div 
       style={{ 
@@ -375,7 +383,7 @@ export default function DashboardPage() {
                               height: 16,
                               borderRadius: '50%',
                               backgroundColor: isHabitCompletedOn(habit.id, date) ? 'green' : '#F0F0F0',
-                              border: isToday(new Date(date)) ? '2px solid #367BDB' : 'none',
+                              border: date === today ? '2px solid #367BDB' : 'none',
                             }}
                           />
                         ))}
