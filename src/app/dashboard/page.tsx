@@ -370,9 +370,15 @@ export default function DashboardPage() {
                   <>
                     <div style={{ flexGrow: 1 }}>
                       <strong>{habit.title}</strong>
-                      <div style={{ fontSize: '0.8em', color: '#555' }}>
-                        Streak: {getCurrentStreak(habit.id)} day{getCurrentStreak(habit.id) === 1 ? '' : 's'}
-                      </div>
+                      {getCurrentStreak(habit.id) > 0 && (
+                        <div style={{ fontSize: '0.8em', color: '#555', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span>🔥</span>
+                          <span>
+                            Streak: {getCurrentStreak(habit.id)} day{getCurrentStreak(habit.id) === 1 ? '' : 's'}
+                          </span>
+                        </div>
+                      )}
+
                       <div style={{ display: 'flex', gap: 6, marginTop: 8, alignItems: 'center' }}>
                         {weekDayLabels.map((label, idx) => (
                           <span key={idx} style={{ fontSize: 12, width: 16, textAlign: 'center' }}>
