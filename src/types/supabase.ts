@@ -88,6 +88,40 @@ export type Database = {
         }
         Relationships: []
       }
+      goals: {
+        Row: {
+          id: string
+          user_id: string
+          created_at: string
+          goal_title:string
+          timeline: string
+          description: string
+          motivator: string
+          future_message: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          created_at?: string
+          goal_title:string
+          timeline: string
+          description: string
+          motivator: string
+          future_message?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          created_at?: string
+          goal_title:string
+          timeline?: string
+          description?: string
+          motivator?: string
+          future_message?: string | null
+        }
+        Relationships: []
+      }
+
     }
     Views: {
       [_ in never]: never

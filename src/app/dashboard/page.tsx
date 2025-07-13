@@ -5,16 +5,22 @@ import { useSupabaseClient, useSession } from '@supabase/auth-helpers-react'
 import { format, parseISO, startOfWeek, addDays, isToday } from 'date-fns'
 import { Database } from '@/types/supabase'
 
+import { useRouter } from 'next/navigation'
+
 type Habit = Database['public']['Tables']['habits']['Row'] & {
   isEditing?: boolean
   editTitle?: string
 }
 type Completion = Database['public']['Tables']['habit_completions']['Row']
 
+type Goal = Database['public']['Tables']['goals']['Row']
+
 export default function DashboardPage() {
   const supabase = useSupabaseClient<Database>()
   const session = useSession()
+  const router = useRouter()
 
+  const [activeGoal, setActiveGoal] = useState<Goal | null>(null)
   const [habits, setHabits] = useState<Habit[]>([])
   const [completions, setCompletions] = useState<Completion[]>([])
   const [newHabitTitle, setNewHabitTitle] = useState('')
@@ -28,6 +34,31 @@ export default function DashboardPage() {
   )
 
   const weekDayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+
+  useEffect(() => {
+    async function checkGoalsAndFetchHabits() {
+      if (!session?.user) return
+
+      const { data: goal, error: goalError } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false }) // just in case there are multiple
+        .limit(1)
+        .single()
+
+      if (!goal || goalError) {
+        router.push('/goals/new')
+        return
+      }
+
+      setActiveGoal(goal)
+      await fetchHabits()
+
+    }
+
+    checkGoalsAndFetchHabits()
+  }, [session])
 
   async function fetchHabits() {
     if (!session?.user) return
@@ -55,10 +86,6 @@ export default function DashboardPage() {
 
     setLoading(false)
   }
-
-  useEffect(() => {
-    fetchHabits()
-  }, [session])
 
   async function addHabit() {
     if (!newHabitTitle.trim() || !session?.user) return
@@ -180,7 +207,6 @@ export default function DashboardPage() {
   if (!session) {
     return <p>Please log in to view your dashboard.</p>
   }
-
   return (
     <div 
       style={{ 
@@ -192,6 +218,22 @@ export default function DashboardPage() {
         borderBottomLeftRadius:"8px",
         borderBottomRightRadius:"8px"  
         }}>
+        {activeGoal && (
+          <div style={{ 
+            backgroundColor: "#FFFFFF", 
+            padding: "16px", 
+            marginBottom: "16px", 
+            borderRadius: "8px",
+            border: "1px solid #D9D9D9"
+          }}>
+            <h2 style={{ fontWeight: "bold", fontSize: "1.2rem", marginBottom: "4px" }}>
+              Current Goal: {activeGoal.goal_title}
+            </h2>
+            <p><strong>Description:</strong> {activeGoal.description}</p>
+            <p><strong>Timeline:</strong> {activeGoal.timeline}</p>
+            <p><strong>Motivator:</strong> {activeGoal.motivator}</p>
+          </div>
+        )}
         <header style = {{backgroundColor:"#FFFFFF", padding: "16px", borderRadius: "8px"}}>
           <h1 style= {{fontWeight:"bold"}}>
             New habit
