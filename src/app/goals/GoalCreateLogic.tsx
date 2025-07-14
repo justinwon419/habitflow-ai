@@ -107,8 +107,12 @@ export default function GoalCreateLogic() {
 
       // 4. Redirect to dashboard
       router.push('/dashboard')
-    } catch (err: any) {
-      alert('Something went wrong: ' + err.message)
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        alert('Something went wrong: ' + err.message)
+      } else {
+        alert('Something went wrong')
+      }
     } finally {
       setLoading(false)
     }

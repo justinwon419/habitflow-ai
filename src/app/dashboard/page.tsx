@@ -218,7 +218,7 @@ export default function DashboardPage() {
 
     return streak
   }
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   async function fetchHabitsFromAI(goalData: GoalInput) {
   const response = await fetch('/api/generate-habits', {
     method: 'POST',
