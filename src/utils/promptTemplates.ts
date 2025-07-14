@@ -8,20 +8,35 @@ export function generateHabitPrompt(goal: {
   message_to_future_self?: string
 }) {
   return `
-I want to achieve the following goal:
+You are a helpful assistant that creates daily habits to help a user achieve their personal goal.
 
-Title: ${goal.goal_title}
-Description: ${goal.description}
-Timeline: ${goal.timeline}
-Motivator: ${goal.motivator}
-Message to future self: ${goal.message_to_future_self || ''}
+The user’s goal details are:
 
-Please create a roadmap of 3–5 daily habits for the first week that will help me work toward this goal.
+- Goal Title: ${goal.goal_title}
+- Description: ${goal.description}
+- Timeline: ${goal.timeline}
+- Motivator: ${goal.motivator}
 
-Respond in this exact format:
+Please generate **5 specific daily habits** that the user can easily track and measure every day to make progress toward their goal within the timeline.
+
+Each habit should be:
+
+- Clear and actionable (e.g., "Run outside for 30 minutes", "Practice color mixing for 15 minutes")
+- Measurable (so the user can mark it done or not done)
+- Focused on progress toward the goal and tied to the motivator
+- Varied in approach but simple enough to complete daily
+
+Return the habits as a JSON array with this format:
 
 [
-  { "title": "Habit title" }
+  { "title": "Habit 1" },
+  { "title": "Habit 2" },
+  ...
 ]
+
+Make sure the habits are practical and avoid vague statements.
+
 `
 }
+
+
