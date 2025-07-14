@@ -7,7 +7,6 @@ import { Database } from '@/types/supabase'
 import { useRouter } from 'next/navigation'
 import { GoalInput } from '@/utils/generateHabits'
 
-
 type Habit = Database['public']['Tables']['habits']['Row'] & {
   isEditing?: boolean
   editTitle?: string
@@ -26,6 +25,10 @@ export default function DashboardPage() {
   const [completions, setCompletions] = useState<Completion[]>([])
   const [newHabitTitle, setNewHabitTitle] = useState('')
   const [loading, setLoading] = useState(true)
+
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editedGoal, setEditedGoal] = useState<Goal | null>(null)
+  const [isRegeneratingHabits, setIsRegeneratingHabits] = useState(false)
 
   const today = format(new Date(), 'yyyy-MM-dd')
 
@@ -150,6 +153,114 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleSaveEditedGoal() {
+    if (!editedGoal || !activeGoal) return;
+
+    // Check if the goal has changed:
+    const goalChanged =
+      editedGoal.goal_title !== activeGoal.goal_title ||
+      editedGoal.description !== activeGoal.description ||
+      editedGoal.timeline !== activeGoal.timeline ||
+      editedGoal.motivator !== activeGoal.motivator;
+
+    if (!goalChanged) {
+      setIsModalOpen(false);
+      return;
+    }
+
+    // Confirm with user before regenerating habits
+    const wantsRegenerate = confirm(
+      'Your goal has changed. Do you want to automatically regenerate your habits? WARNING: This will DELETE your existing habits.'
+    );
+
+    setIsModalOpen(false);
+
+    if (!wantsRegenerate) {
+      // Just update the goal without regenerating habits
+      setLoading(true);
+      const { error } = await supabase
+        .from('goals')
+        .update({
+          goal_title: editedGoal.goal_title,
+          description: editedGoal.description,
+          timeline: editedGoal.timeline,
+          motivator: editedGoal.motivator,
+        })
+        .eq('id', activeGoal.id);
+
+      if (error) alert('Failed to update goal: ' + error.message);
+      else setActiveGoal(editedGoal);
+
+      setLoading(false);
+      return;
+    }
+
+    // User agreed to regenerate habits
+    setIsRegeneratingHabits(true);
+
+    try {
+      // Update the goal first
+      const { error: updateError } = await supabase
+        .from('goals')
+        .update({
+          goal_title: editedGoal.goal_title,
+          description: editedGoal.description,
+          timeline: editedGoal.timeline,
+          motivator: editedGoal.motivator,
+        })
+        .eq('id', activeGoal.id);
+
+      if (updateError) throw updateError;
+
+      setActiveGoal(editedGoal);
+
+      // Delete existing habits for this user & goal
+      const { error: deleteError } = await supabase
+        .from('habits')
+        .delete()
+        .eq('user_id', session!.user!.id)
+        .eq('goal_id', activeGoal.id);
+
+      if (deleteError) throw deleteError;
+
+      // Generate new habits from AI API
+      const response = await fetch('/api/generate-habits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          goal_title: editedGoal.goal_title,
+          description: editedGoal.description,
+          timeline: editedGoal.timeline,
+          motivator: editedGoal.motivator,
+          messageToFutureSelf: editedGoal.future_message,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to generate habits from AI');
+
+      const { habits } = await response.json();
+
+      // Insert new habits
+      const habitInserts = habits.map((habit: { title: string }) => ({
+        user_id: session!.user!.id,
+        goal_id: activeGoal.id,
+        title: habit.title,
+        created_at: new Date().toISOString(),
+      }));
+
+      const { error: insertError } = await supabase.from('habits').insert(habitInserts);
+      if (insertError) throw insertError;
+
+      // Refresh habit list
+      await fetchHabits();
+    } catch (err: any) {
+      alert('Something went wrong: ' + err.message);
+    } finally {
+      setIsRegeneratingHabits(false);
+    }
+  }
+
+
   function isHabitCompletedOn(habitId: string, date: string) {
     return completions.some(c => {
       if (c.habit_id !== habitId) return false
@@ -239,32 +350,95 @@ export default function DashboardPage() {
     return <p>Please log in to view your dashboard.</p>
   }
   return (
-    <div 
-      style={{ 
-        padding: 20, 
-        maxWidth: 800, 
-        margin: 'auto', 
-        backgroundColor:"#F0F0F0", 
-        paddingBottom:"8px", 
-        borderBottomLeftRadius:"8px",
-        borderBottomRightRadius:"8px"  
-        }}>
-        {activeGoal && (
-          <div style={{ 
-            backgroundColor: "#FFFFFF", 
-            padding: "16px", 
-            marginBottom: "16px", 
-            borderRadius: "8px",
-            border: "1px solid #D9D9D9"
-          }}>
-            <h2 style={{ fontWeight: "bold", fontSize: "1.2rem", marginBottom: "4px" }}>
+    <div className="min-h-screen bg-gray-100 p-4 max-w-4xl mx-auto">
+      {activeGoal && (
+        <div className="bg-white p-4 rounded-lg shadow mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-lg font-bold">
               Current Goal: {activeGoal.goal_title}
             </h2>
-            <p><strong>Description:</strong> {activeGoal.description}</p>
-            <p><strong>Timeline:</strong> {activeGoal.timeline}</p>
-            <p><strong>Motivator:</strong> {activeGoal.motivator}</p>
+            <button
+              className="text-sm bg-[#367BDB] text-white px-3 py-1 rounded hover:bg-blue-600"
+              onClick={() => {
+                setEditedGoal(activeGoal)
+                setIsModalOpen(true)
+              }}
+            >
+              Edit
+            </button>
           </div>
-        )}
+          <p><strong>Description:</strong> {activeGoal.description}</p>
+          <p><strong>Timeline:</strong> {activeGoal.timeline}</p>
+          <p><strong>Motivator:</strong> {activeGoal.motivator}</p>
+        </div>
+      )}
+
+      {/* Modal */}
+      {isModalOpen && editedGoal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h2 className="text-lg font-bold mb-4">Edit Goal</h2>
+
+            <div className="mb-4">
+              <label className="block font-semibold mb-1">Title</label>
+              <input
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={editedGoal.goal_title}
+                onChange={e => setEditedGoal({ ...editedGoal, goal_title: e.target.value })}
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block font-semibold mb-1">Description</label>
+              <input
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={editedGoal.description}
+                onChange={e => setEditedGoal({ ...editedGoal, description: e.target.value })}
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block font-semibold mb-1">Timeline</label>
+              <input
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={editedGoal.timeline}
+                onChange={e => setEditedGoal({ ...editedGoal, timeline: e.target.value })}
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block font-semibold mb-1">Motivator</label>
+              <textarea
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={editedGoal.motivator}
+                onChange={e => setEditedGoal({ ...editedGoal, motivator: e.target.value })}
+              />
+            </div>
+
+            <div className="flex justify-between">
+              <button
+                className="bg-gray-300 text-black px-4 py-2 rounded"
+                onClick={() => setIsModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-[#367BDB] text-white px-4 py-2 rounded"
+                onClick={handleSaveEditedGoal}
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Loading overlay: show only when regenerating */}
+      {isRegeneratingHabits && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-50">
+          <div className="loader"></div>
+          <p className="text-white text-lg font-semibold">Regenerating habits...</p>
+        </div>
+      )}
         <header style = {{backgroundColor:"#FFFFFF", padding: "16px", borderRadius: "8px"}}>
           <h1 style= {{fontWeight:"bold"}}>
             New habit

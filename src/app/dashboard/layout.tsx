@@ -3,6 +3,7 @@
 import React from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
+import '@/styles/globals.css'
 
 export default function DashboardLayout({
   children,
