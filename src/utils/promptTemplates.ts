@@ -26,7 +26,7 @@ Each habit should be:
 - Focused on progress toward the goal and tied to the motivator
 - Varied in approach but simple enough to complete daily
 
-Return the habits as a JSON array with this format:
+ONLY return the habits as a JSON array with this format:
 
 [
   { "title": "Habit 1" },
@@ -34,7 +34,7 @@ Return the habits as a JSON array with this format:
   ...
 ]
 
-Make sure the habits are practical and avoid vague statements.
+Make sure the habits are practical and avoid vague statements. Do NOT include any other text, explanation, or formatting.
 
 `
 }
