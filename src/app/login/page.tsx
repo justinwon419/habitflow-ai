@@ -5,6 +5,9 @@ import { supabase } from '@/lib/supabase'
 import { Github } from 'lucide-react'
 import { FcGoogle } from 'react-icons/fc'
 import { motion } from 'framer-motion'
+import { useRouter } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { Database } from '@/types/supabase'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -13,23 +16,30 @@ export default function LoginPage() {
   const [showReset, setShowReset] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
-        window.location.href = '/dashboard'
+        router.push('/dashboard')
       }
     })
   }, [])
 
   const handleOAuthLogin = async (provider: 'github' | 'google') => {
-    const { error } = await supabase.auth.signInWithOAuth({
+    const supabaseClient = createClientComponentClient<Database>()
+    const origin = location.origin
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${location.origin}/dashboard`,
+        redirectTo: `${origin}/auth/callback`, // Custom callback handler
       },
     })
-    if (error) setError(error.message)
+
+    if (error) {
+      setError(error.message)
+    }
   }
 
   const handleEmailAuth = async () => {
@@ -41,13 +51,37 @@ export default function LoginPage() {
       return
     }
 
+    const supabaseClient = createClientComponentClient<Database>()
+
     if (isSignup) {
-      const { error } = await supabase.auth.signUp({ email, password })
-      if (error) setError(error.message)
-      else setMessage('Check your inbox to confirm your email')
+      const { data, error } = await supabase.auth.signUp({ email, password })
+      if (error) {
+        setError(error.message)
+      } else {
+        setMessage('Check your inbox to confirm your email')
+      }
     } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setError(error.message)
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+      if (error) {
+        setError(error.message)
+      } else {
+        // ✅ Check if the user has goals and route accordingly
+        const user = data.user
+        if (user) {
+          const { data: goals } = await supabaseClient
+            .from('goals')
+            .select('*')
+            .eq('user_id', user.id)
+            .limit(1)
+
+          if (goals && goals.length > 0) {
+            router.push('/dashboard')
+          } else {
+            router.push('/goals/new')
+          }
+        }
+      }
     }
   }
 
