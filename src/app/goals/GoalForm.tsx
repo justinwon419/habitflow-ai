@@ -16,6 +16,7 @@ interface GoalFormProps {
   futureMessage: string
   setFutureMessage: (value: string) => void
   onSubmit: () => void
+  onSubmitWithAI: () => void // <- New prop
   loading: boolean
 }
 
@@ -31,6 +32,7 @@ export default function GoalForm({
   futureMessage,
   setFutureMessage,
   onSubmit,
+  onSubmitWithAI,
   loading,
 }: GoalFormProps) {
   return (
@@ -95,13 +97,24 @@ export default function GoalForm({
         />
       </label>
 
-      <button
-        onClick={onSubmit}
-        disabled={loading}
-        className="w-full bg-[#367BDB] text-white py-2 px-4 rounded-md hover:bg-blue-600 transition"
-      >
-        {loading ? 'Creating Goal...' : 'Create Goal'}
-      </button>
+      {/* Submit buttons */}
+      <div className="flex gap-4 mt-6">
+        <button
+          onClick={onSubmit}
+          disabled={loading}
+          className="w-1/2 bg-gray-200 text-black py-2 px-4 rounded-md hover:bg-gray-300 transition"
+        >
+          {loading ? 'Creating...' : 'Manual Habits'}
+        </button>
+
+        <button
+          onClick={onSubmitWithAI}
+          disabled={loading}
+          className="w-1/2 bg-[#367BDB] text-white py-2 px-4 rounded-md hover:bg-blue-600 transition"
+        >
+          {loading ? 'Generating...' : 'AI-Generated Habits'}
+        </button>
+      </div>
     </div>
   )
 }

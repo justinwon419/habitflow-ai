@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { useSupabaseClient, useSession } from '@supabase/auth-helpers-react'
 import { format, parseISO, startOfWeek, addDays } from 'date-fns'
 import { Database } from '@/types/supabase'
-
 import { useRouter } from 'next/navigation'
+import { GoalInput } from '@/utils/generateHabits'
+
 
 type Habit = Database['public']['Tables']['habits']['Row'] & {
   isEditing?: boolean
@@ -217,6 +218,21 @@ export default function DashboardPage() {
 
     return streak
   }
+
+  async function fetchHabitsFromAI(goalData: GoalInput) {
+  const response = await fetch('/api/generate-habits', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(goalData),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to generate habits')
+  }
+
+  const data = await response.json()
+  return data.habits
+}
 
 
   if (!session) {
