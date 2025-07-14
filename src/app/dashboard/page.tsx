@@ -457,7 +457,7 @@ export default function DashboardPage() {
       )}
 
       {/* New Habit Card */}
-      <header style = {{backgroundColor:"#FFFFFF", padding: "16px", borderRadius: "8px"}}>
+      <header className="bg-white p-4 rounded-lg shadow mb-4 mt-4">
         <h1 style= {{fontWeight:"bold"}}>
           New habit
         </h1>
@@ -491,7 +491,23 @@ export default function DashboardPage() {
           </button>
         </div>
       </header>
-        
+      <hr className="my-4 border-t border-black" />
+      {/* Daily Progress Bar */}
+      {habits.length > 0 && (
+        <div className="bg-white p-4 rounded-lg shadow mb-4 mt-4">
+          <h3 className="font-semibold mb-2">Daily Progress</h3>
+          <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+            <div
+              className="h-full bg-[#367BDB] transition-all duration-500"
+              style={{ width: `${completionPercentage}%` }}
+            />
+          </div>
+          <p className="text-sm text-gray-600 mt-1">
+            {Math.round(completionPercentage)}% complete
+          </p>
+        </div>
+      )}
+
       {/* The Habit Dashboard Card: Loading State, Empty State, Habit Cards, Streaks */}
         {loading ? (
           <p 
