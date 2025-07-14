@@ -253,8 +253,13 @@ export default function DashboardPage() {
 
       // Refresh habit list
       await fetchHabits();
-    } catch (err: any) {
-      alert('Something went wrong: ' + err.message);
+    } catch (err) {
+      if (err instanceof Error){
+        alert('Something went wrong: ' + err.message);
+      }
+      else{
+        alert('Something went wrong.')
+      }
     } finally {
       setIsRegeneratingHabits(false);
     }
