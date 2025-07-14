@@ -348,7 +348,16 @@ export default function DashboardPage() {
 
   const data = await response.json()
   return data.habits
-}
+  }
+
+  const totalCheckmarks = habits.length
+  const completedCheckmarks = habits.filter(habit =>
+    isHabitCompletedOn(habit.id, today)
+  ).length
+
+  const completionPercentage = totalCheckmarks === 0
+    ? 0
+    : (completedCheckmarks / totalCheckmarks) * 100
 
 
   if (!session) {
@@ -356,6 +365,7 @@ export default function DashboardPage() {
   }
   return (
     <div className="min-h-screen bg-gray-100 p-4 max-w-4xl mx-auto">
+      {/* Goal Card */}
       {activeGoal && (
         <div className="bg-white p-4 rounded-lg shadow mb-4">
           <div className="flex justify-between items-center mb-2">
@@ -378,7 +388,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Modal */}
+      {/* Goal Edit Modal */}
       {isModalOpen && editedGoal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
@@ -437,49 +447,52 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-      {/* Loading overlay: show only when regenerating */}
+
+      {/* Loading Overlay: show only when regenerating new AI-Goals */}
       {isRegeneratingHabits && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-50">
           <div className="loader"></div>
           <p className="text-white text-lg font-semibold">Regenerating habits...</p>
         </div>
       )}
-        <header style = {{backgroundColor:"#FFFFFF", padding: "16px", borderRadius: "8px"}}>
-          <h1 style= {{fontWeight:"bold"}}>
-            New habit
-          </h1>
 
-          <div style={{ display: 'flex', gap: 16,paddingTop:"4px"}}>
-            <input
-              type="text"
-              placeholder="Enter a brief habit description"
-              value={newHabitTitle}
-              onChange={e => setNewHabitTitle(e.target.value)}
-              style={{
-                width: '100%',
-                padding: 8,
-                backgroundColor: 'white',
-                border: '1px solid #D9D9D9',
-                borderRadius: 8,
-              }}
-            />
-            <button
-              onClick={addHabit}
-              style={{
-                width: '20%',
-                padding: 8,
-                marginLeft: 8,
-                backgroundColor: '#367BDB',
-                borderRadius: 8,
-                color: 'white',
-              }}
-            >
-              Add habit
-            </button>
-          </div>
-        </header>
+      {/* New Habit Card */}
+      <header style = {{backgroundColor:"#FFFFFF", padding: "16px", borderRadius: "8px"}}>
+        <h1 style= {{fontWeight:"bold"}}>
+          New habit
+        </h1>
+
+        <div style={{ display: 'flex', gap: 16,paddingTop:"4px"}}>
+          <input
+            type="text"
+            placeholder="Enter a brief habit description"
+            value={newHabitTitle}
+            onChange={e => setNewHabitTitle(e.target.value)}
+            style={{
+              width: '100%',
+              padding: 8,
+              backgroundColor: 'white',
+              border: '1px solid #D9D9D9',
+              borderRadius: 8,
+            }}
+          />
+          <button
+            onClick={addHabit}
+            style={{
+              width: '20%',
+              padding: 8,
+              marginLeft: 8,
+              backgroundColor: '#367BDB',
+              borderRadius: 8,
+              color: 'white',
+            }}
+          >
+            Add habit
+          </button>
+        </div>
+      </header>
         
-
+      {/* The Habit Dashboard Card: Loading State, Empty State, Habit Cards, Streaks */}
         {loading ? (
           <p 
             style={{

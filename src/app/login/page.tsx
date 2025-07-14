@@ -17,7 +17,7 @@ export default function LoginPage() {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-
+  
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
@@ -27,10 +27,9 @@ export default function LoginPage() {
   }, [])
 
   const handleOAuthLogin = async (provider: 'github' | 'google') => {
-    const supabaseClient = createClientComponentClient<Database>()
     const origin = location.origin
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
         redirectTo: `${origin}/auth/callback`, // Custom callback handler
@@ -54,7 +53,7 @@ export default function LoginPage() {
     const supabaseClient = createClientComponentClient<Database>()
 
     if (isSignup) {
-      const { data, error } = await supabase.auth.signUp({ email, password })
+      const { error } = await supabase.auth.signUp({ email, password })
       if (error) {
         setError(error.message)
       } else {
