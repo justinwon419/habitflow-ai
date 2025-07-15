@@ -1,3 +1,5 @@
+import { SupabaseClient } from '@supabase/supabase-js'
+import { Database } from '@/types/supabase'
 import { Habit, Completion } from '@/types/db'
 import { startOfWeek, endOfWeek, format } from 'date-fns'
 
@@ -8,7 +10,7 @@ export function getWeeklyStats(
 ) {
   const total = habits.length * weekDates.length
   let completed = 0
-  let streaks: Record<string, number> = {}
+  const streaks: Record<string, number> = {}
 
   for (const habit of habits) {
     let streak = 0
@@ -37,7 +39,7 @@ export function getWeeklyStats(
   }
 }
 
-export async function calculateWeeklyScore(supabase: any, userId: string, weekStart?: Date) {
+export async function calculateWeeklyScore(supabase: SupabaseClient <Database>, userId: string, weekStart?: Date) {
   const start = startOfWeek(weekStart ?? new Date(), { weekStartsOn: 0 })
   const end = endOfWeek(start, { weekStartsOn: 0 })
 
@@ -54,7 +56,7 @@ export async function calculateWeeklyScore(supabase: any, userId: string, weekSt
     throw new Error('Failed to fetch habits')
   }
   
-  const habitIds = habits.map((h:Habit) => h.id)
+  const habitIds = habits.map(h => h.id)
 
   if (habitIds.length === 0) return 0
   

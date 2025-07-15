@@ -8,8 +8,7 @@ import { useRouter } from 'next/navigation'
 import { GoalInput } from '@/utils/generateHabits'
 import WeeklyReportModal from '@/components/WeeklyReportModal'
 import { getWeeklyStats, calculateWeeklyScore } from '@/utils/stats'
-import { fetchWeeklyReport } from '@/utils/generateWeeklyReport'
-import { getNextWeekDifficultyChange, getEncouragementMessage, DifficultyChange } from '@/utils/nextDifficulty'
+import { DifficultyChange } from '@/utils/nextDifficulty'
 
 type Habit = Database['public']['Tables']['habits']['Row'] & {
   isEditing?: boolean
@@ -30,8 +29,8 @@ export default function DashboardPage() {
   const [newHabitTitle, setNewHabitTitle] = useState('')
   const [loading, setLoading] = useState(true)
 
-  const [difficulty, setDifficulty] = useState<DifficultyChange | null>(null)
-  const [nextWeekMessage, setNextWeekMessage] = useState<string | null>(null)
+  const [difficulty] = useState<DifficultyChange | null>(null)
+  const [nextWeekMessage] = useState<string | null>(null)
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editedGoal, setEditedGoal] = useState<Goal | null>(null)

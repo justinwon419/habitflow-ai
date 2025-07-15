@@ -1,7 +1,8 @@
-import { Habit } from '@/types/db'
+import { SupabaseClient } from '@supabase/supabase-js'
+import { Database } from '@/types/supabase' // adjust the path as needed
 import { startOfWeek, endOfWeek, format } from 'date-fns'
 
-export async function calculateWeeklyScore(supabase: any, userId: string, weekStart?: Date) {
+export async function calculateWeeklyScore(supabase: SupabaseClient <Database>, userId: string, weekStart?: Date) {
   const start = startOfWeek(weekStart ?? new Date(), { weekStartsOn: 0 })
   const end = endOfWeek(start, { weekStartsOn: 0 })
 
@@ -18,7 +19,7 @@ export async function calculateWeeklyScore(supabase: any, userId: string, weekSt
     throw new Error('Failed to fetch habits')
   }
   
-  const habitIds = habits.map((h:Habit) => h.id)
+  const habitIds = habits.map(h => h.id)
 
   if (habitIds.length === 0) return 0
   
