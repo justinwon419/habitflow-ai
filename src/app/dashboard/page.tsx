@@ -2,10 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSupabaseClient, useSession } from '@supabase/auth-helpers-react'
-import { format, parseISO, startOfWeek, addDays } from 'date-fns'
+import { format, parseISO, startOfWeek, addDays} from 'date-fns'
 import { Database } from '@/types/supabase'
 import { useRouter } from 'next/navigation'
 import { GoalInput } from '@/utils/generateHabits'
+import WeeklyReportModal from '@/components/WeeklyReportModal'
+import { getWeeklyStats, calculateWeeklyScore } from '@/utils/stats'
+import { fetchWeeklyReport } from '@/utils/generateWeeklyReport'
+import { getNextWeekDifficultyChange, getEncouragementMessage, DifficultyChange } from '@/utils/nextDifficulty'
 
 type Habit = Database['public']['Tables']['habits']['Row'] & {
   isEditing?: boolean
@@ -25,6 +29,9 @@ export default function DashboardPage() {
   const [completions, setCompletions] = useState<Completion[]>([])
   const [newHabitTitle, setNewHabitTitle] = useState('')
   const [loading, setLoading] = useState(true)
+
+  const [difficulty, setDifficulty] = useState<DifficultyChange | null>(null)
+  const [nextWeekMessage, setNextWeekMessage] = useState<string | null>(null)
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editedGoal, setEditedGoal] = useState<Goal | null>(null)
@@ -89,6 +96,60 @@ export default function DashboardPage() {
 
     checkGoalsAndFetchHabits()
   }, [session, fetchHabits, router, supabase])
+
+  useEffect(() => {
+    async function maybeGenerateWeeklyReport() {
+      if (!session?.user || !activeGoal) return
+
+      const thisWeekKey = `weeklyReportShown-${format(new Date(), 'yyyy-ww')}`
+      if (localStorage.getItem(thisWeekKey)) return
+
+      const now = new Date()
+      const isSunday8pmLocal =
+        now.getDay() === 0 && // Sunday
+        now.getHours() === 20 && // 8pm
+        now.getMinutes() < 60 // within 60 minutes of 8pm
+
+      if (!isSunday8pmLocal) return
+
+      try {
+        const score = await calculateWeeklyScore(supabase, session.user.id)
+
+        const response = await fetch('/api/weekly-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            score,
+            habits,
+            goal: {
+              goal_title: activeGoal.goal_title,
+              description: activeGoal.description,
+              timeline: activeGoal.timeline,
+              motivator: activeGoal.motivator,
+              message_to_future_self: activeGoal.future_message || '',
+            },
+          }),
+        })
+
+        const data = await response.json()
+
+        if (response.ok && data.summary) {
+          setWeeklyReport(data.summary)
+          setShowWeeklyModal(true)
+          localStorage.setItem(thisWeekKey, 'true') // Mark as shown
+        } else {
+          console.error('Failed to generate summary:', data.error)
+        }
+      } catch (error) {
+        console.error('Error generating weekly report:', error)
+      }
+    }
+
+    maybeGenerateWeeklyReport()
+  }, [session, habits, activeGoal, supabase])
+
+
+
 
   async function addHabit() {
     if (!newHabitTitle.trim() || !session?.user) return
@@ -359,10 +420,16 @@ export default function DashboardPage() {
     ? 0
     : (completedCheckmarks / totalCheckmarks) * 100
 
+  /* Function to collect the weekly stats for Weekly Report Modal */ 
+  const weeklyStats = getWeeklyStats(habits, completions, weekDays)
+  //The use state for the WeeklyModal is set to false
+  const [weeklyReport, setWeeklyReport] = useState<string | null>(null)
+  const [showWeeklyModal, setShowWeeklyModal] = useState(false)
 
   if (!session) {
     return <p>Please log in to view your dashboard.</p>
   }
+
   return (
     <div className="min-h-screen bg-gray-100 p-4 max-w-4xl mx-auto">
       {/* Goal Card */}
@@ -386,6 +453,16 @@ export default function DashboardPage() {
           <p><strong>Timeline:</strong> {activeGoal.timeline}</p>
           <p><strong>Motivator:</strong> {activeGoal.motivator}</p>
         </div>
+      )}
+
+      {/* Weekly Report Modal */}
+      {showWeeklyModal && weeklyReport && difficulty && nextWeekMessage && (
+        <WeeklyReportModal
+          onClose={() => setShowWeeklyModal(false)}
+          stats={weeklyStats}
+          summary={weeklyReport}
+          nextWeekMessage={nextWeekMessage}
+        />
       )}
 
       {/* Goal Edit Modal */}
@@ -492,6 +569,7 @@ export default function DashboardPage() {
         </div>
       </header>
       <hr className="my-4 border-t border-black" />
+      
       {/* Daily Progress Bar */}
       {habits.length > 0 && (
         <div className="bg-white p-4 rounded-lg shadow mb-4 mt-4">
@@ -536,7 +614,7 @@ export default function DashboardPage() {
                   backgroundColor: "white",
                   padding: "16px",
                   paddingBottom: "8px",
-                  borderRadius: "8px"
+                  borderRadius: "8px",
                 }}
               >
                 <input

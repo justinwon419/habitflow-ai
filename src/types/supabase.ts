@@ -14,27 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      "Habit Table": {
-        Row: {
-          created_at: string
-          id: string
-          name: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       habit_completions: {
         Row: {
           created_at: string | null

@@ -1,10 +1,6 @@
 // utils/generateHabits.ts
-import OpenAI from 'openai'
+import { openai } from '@/lib/openai'
 import { generateHabitPrompt } from './promptTemplates'
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-})
 
 export interface GoalInput {
   goal_title: string
