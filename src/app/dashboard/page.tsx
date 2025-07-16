@@ -10,6 +10,7 @@ import WeeklyReportModal from '@/components/WeeklyReportModal'
 import { getWeeklyStats, calculateWeeklyScore } from '@/utils/stats'
 import { getNextWeekDifficultyChange, getEncouragementMessage } from '@/utils/nextDifficulty'
 import { saveDifficultyOverride } from '@/utils/saveDifficultyOverride'
+import {toast} from 'sonner'
 
 type Habit = Database['public']['Tables']['habits']['Row'] & {
   isEditing?: boolean
@@ -190,11 +191,86 @@ export default function DashboardPage() {
     maybeGenerateWeeklyReport()
   }, [session, habits, activeGoal, supabase])
 
+  useEffect(() => {
+    async function maybeGenerateNewWeeklyHabits() {
+      if (!session?.user || !activeGoal) return;
 
+      const now = new Date();
+      const currentWeek = format(now, 'yyyy-ww');
+      const habitsGeneratedKey = `habitsGenerated-${currentWeek}`;
 
+      // Prevent duplicate generation
+      if (localStorage.getItem(habitsGeneratedKey)) return;
 
+      try {
+        // Fetch difficulty override
+        const { data: overrideData } = await supabase
+          .from('weekly_difficulty_overrides')
+          .select('override')
+          .eq('user_id', session.user.id)
+          .eq('week', currentWeek)
+          .single();
 
+        const score = await calculateWeeklyScore(supabase, session.user.id);
+        const difficulty = overrideData?.override ?? getNextWeekDifficultyChange(score);
 
+        // Delete old habits
+        const { error: deleteError } = await supabase
+          .from('habits')
+          .delete()
+          .eq('user_id', session.user.id)
+          .eq('goal_id', activeGoal.id);
+
+        if (deleteError) {
+          console.error('Error deleting old habits:', deleteError);
+          return;
+        }
+
+        // Generate new habits from API
+        const response = await fetch('/api/generate-habits', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            goal_title: activeGoal.goal_title,
+            description: activeGoal.description,
+            timeline: activeGoal.timeline,
+            motivator: activeGoal.motivator,
+            messageToFutureSelf: activeGoal.future_message,
+            difficulty: difficulty, // optional, in case your API handles this
+          }),
+        });
+
+        if (!response.ok) {
+          console.error('Failed to fetch new habits from AI');
+          return;
+        }
+
+        const { habits: newHabits } = await response.json();
+
+        // Insert new habits
+        const inserts = newHabits.map((habit: { title: string }) => ({
+          user_id: session.user.id,
+          goal_id: activeGoal.id,
+          title: habit.title,
+          created_at: new Date().toISOString(),
+        }));
+
+        const { error: insertError } = await supabase.from('habits').insert(inserts);
+        
+        if (insertError) {
+          console.error('Error inserting new habits:', insertError);
+          return;
+        }
+        toast.success('New habits for the week have been generated!')
+        localStorage.setItem(habitsGeneratedKey, 'true');
+        await fetchHabits(); // Refresh the habit list
+      } catch (err) {
+        console.error('Error in weekly habit generation:', err);
+      }
+    }
+
+    maybeGenerateNewWeeklyHabits();
+  }, [session, activeGoal, supabase, fetchHabits]);
 
   async function addHabit() {
     if (!newHabitTitle.trim() || !session?.user) return

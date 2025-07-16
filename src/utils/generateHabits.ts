@@ -14,7 +14,7 @@ export interface Habit {
   title: string
 }
 
-export async function generateHabits(goal: GoalInput): Promise<Habit[]> {
+export async function generateHabits(goal: GoalInput, difficulty?: 'harder' | 'same' | 'easier'): Promise<Habit[]> {
   const prompt = generateHabitPrompt(goal)
 
   try {

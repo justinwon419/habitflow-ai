@@ -2,6 +2,7 @@ import './globals.css'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import SupabaseProvider from '@/components/SupabaseProvider'
+import { Toaster } from 'sonner'
 
 export const metadata = {
   title: 'HabitFlow',
@@ -23,6 +24,7 @@ export default async function RootLayout({
       <body>
         <SupabaseProvider initialSession={session}>
           {children}
+          <Toaster richColors position="top-center" />
         </SupabaseProvider>
       </body>
     </html>

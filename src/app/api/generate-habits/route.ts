@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { generateHabits } from '@/utils/generateHabits'
 
 export async function POST(req: NextRequest) {
-  const { goal_title, description, motivator, messageToFutureSelf, timeline } = await req.json()
+  const { goal_title, description, motivator, messageToFutureSelf, timeline, difficulty} = await req.json()
 
   try {
     const habits = await generateHabits({
@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
       motivator,
       message_to_future_self: messageToFutureSelf,
       timeline,
-    })
+    },difficulty,)
 
     return NextResponse.json({ habits })
   } catch (error) {
