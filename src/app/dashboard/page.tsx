@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 import { GoalInput } from '@/utils/generateHabits'
 import WeeklyReportModal from '@/components/WeeklyReportModal'
 import { getWeeklyStats, calculateWeeklyScore } from '@/utils/stats'
-import { DifficultyChange, getNextWeekDifficultyChange, getEncouragementMessage } from '@/utils/nextDifficulty'
+import { getNextWeekDifficultyChange, getEncouragementMessage } from '@/utils/nextDifficulty'
 import { saveDifficultyOverride } from '@/utils/saveDifficultyOverride'
 
 type Habit = Database['public']['Tables']['habits']['Row'] & {

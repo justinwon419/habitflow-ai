@@ -25,7 +25,7 @@ export default function LoginPage() {
         router.replace('/dashboard')
       }
     })
-  }, [])
+  }, [router, supabaseClient.auth])
 
   const handleOAuthLogin = async (provider: 'github' | 'google') => {
     const origin = location.origin
