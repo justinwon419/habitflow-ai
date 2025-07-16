@@ -8,6 +8,7 @@ import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Database } from '@/types/supabase'
+import { useSession } from '@supabase/auth-helpers-react'
 
 export default function LoginPage() {
   const supabaseClient = createClientComponentClient<Database>()
@@ -22,7 +23,7 @@ export default function LoginPage() {
   useEffect(() => {
     supabaseClient.auth.getSession().then(({ data }) => {
       if (data.session) {
-        router.push('/dashboard')
+        router.replace('/dashboard')
       }
     })
   }, [])
@@ -33,7 +34,7 @@ export default function LoginPage() {
     const { error } = await supabaseClient.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${origin}/api/auth/callback`, // Custom callback handler
+        redirectTo: `${origin}/auth/callback`, // Custom callback handler
       },
     })
 
