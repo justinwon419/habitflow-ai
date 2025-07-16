@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSupabaseClient, useSession } from '@supabase/auth-helpers-react'
 import { format, parseISO, startOfWeek, addDays} from 'date-fns'
 import { Database } from '@/types/supabase'
@@ -8,7 +8,8 @@ import { useRouter } from 'next/navigation'
 import { GoalInput } from '@/utils/generateHabits'
 import WeeklyReportModal from '@/components/WeeklyReportModal'
 import { getWeeklyStats, calculateWeeklyScore } from '@/utils/stats'
-import { DifficultyChange } from '@/utils/nextDifficulty'
+import { DifficultyChange, getNextWeekDifficultyChange, getEncouragementMessage } from '@/utils/nextDifficulty'
+import { saveDifficultyOverride } from '@/utils/saveDifficultyOverride'
 
 type Habit = Database['public']['Tables']['habits']['Row'] & {
   isEditing?: boolean
@@ -29,12 +30,16 @@ export default function DashboardPage() {
   const [newHabitTitle, setNewHabitTitle] = useState('')
   const [loading, setLoading] = useState(true)
 
-  const [difficulty] = useState<DifficultyChange | null>(null)
-  const [nextWeekMessage] = useState<string | null>(null)
+  const [difficulty, setDifficulty] = useState<DifficultyChange | null>(null)
+  const [nextWeekMessage, setNextWeekMessage] = useState<string | null>(null)
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editedGoal, setEditedGoal] = useState<Goal | null>(null)
   const [isRegeneratingHabits, setIsRegeneratingHabits] = useState(false)
+  
+  const [weeklyReport, setWeeklyReport] = useState<string | null>(null)
+  const [showWeeklyModal, setShowWeeklyModal] = useState(false)
+  const [difficultyOverride, setDifficultyOverride] = useState<'easier' | 'same' | 'harder' | null>(null)
 
   const today = format(new Date(), 'yyyy-MM-dd')
 
@@ -42,8 +47,10 @@ export default function DashboardPage() {
   const weekDays = Array.from({ length: 7 }, (_, i) =>
     format(addDays(startOfThisWeek, i), 'yyyy-MM-dd')
   )
-
+  const weeklyStats = getWeeklyStats(habits, completions, weekDays)
   const weekDayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+
+  const hasRunRef = useRef<string | null>(null)
 
   const fetchHabits = useCallback(async () => {
     if (!session?.user) return
@@ -98,21 +105,55 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function maybeGenerateWeeklyReport() {
-      if (!session?.user || !activeGoal) return
+      if (!session?.user || !activeGoal || hasRunRef.current) {
+        console.log('Missing session or activeGoal')
+        return
+      }
 
-      const thisWeekKey = `weeklyReportShown-${format(new Date(), 'yyyy-ww')}`
-      if (localStorage.getItem(thisWeekKey)) return
+      const thisWeekKey = format(new Date(), 'yyyy-ww')
+
+      // Prevent running more than one time (it was running 3 times before)
+      if (hasRunRef.current === thisWeekKey) return
+      hasRunRef.current = thisWeekKey
+      //Prevent running more than once per week
+      const shownKey = `weeklyReportShown-${thisWeekKey}`
+      if (localStorage.getItem(shownKey)) return
 
       const now = new Date()
       const isSunday8pmLocal =
-        now.getDay() === 0 && // Sunday
-        now.getHours() === 20 && // 8pm
-        now.getMinutes() < 60 // within 60 minutes of 8pm
+        now.getDay() === 0 &&
+        now.getHours() === 20 &&
+        now.getMinutes() < 60
 
-      if (!isSunday8pmLocal) return
+      // Uncomment this to restore the original condition:
+      if (!isSunday8pmLocal) {
+        console.log('Not Sunday 8pm local, skipping report generation')
+        return
+      }
 
       try {
+
+
         const score = await calculateWeeklyScore(supabase, session.user.id)
+        console.log('Weekly score:', score)
+
+        const { data: overrideData, error: overrideError } = await supabase
+          .from('weekly_difficulty_overrides')
+          .select('override')
+          .eq('user_id', session.user.id)
+          .eq('week', format(now, 'yyyy-ww'))
+          .single()
+
+        if (overrideError) {
+          console.warn('Override fetch error:', overrideError.message)
+        } else {
+          console.log('Fetched override data:', overrideData)
+        }
+
+        const difficulty = overrideData?.override ?? getNextWeekDifficultyChange(score)
+        const nextWeekMessage = getEncouragementMessage(difficulty)
+        console.log('Determined difficulty:', difficulty)
+        console.log('Generated encouragement message:', nextWeekMessage)
 
         const response = await fetch('/api/weekly-report', {
           method: 'POST',
@@ -131,21 +172,28 @@ export default function DashboardPage() {
         })
 
         const data = await response.json()
+        console.log('Weekly report API response:', data)
 
         if (response.ok && data.summary) {
           setWeeklyReport(data.summary)
+          setDifficulty(difficulty)
+          setNextWeekMessage(nextWeekMessage)
           setShowWeeklyModal(true)
-          localStorage.setItem(thisWeekKey, 'true') // Mark as shown
+          localStorage.setItem(thisWeekKey, 'true')
+          console.log('Weekly modal set to show ✅')
         } else {
           console.error('Failed to generate summary:', data.error)
         }
       } catch (error) {
-        console.error('Error generating weekly report:', error)
+        console.error('Unexpected error during weekly report generation:', error)
       }
     }
 
     maybeGenerateWeeklyReport()
   }, [session, habits, activeGoal, supabase])
+
+
+
 
 
 
@@ -418,17 +466,14 @@ export default function DashboardPage() {
   const completionPercentage = totalCheckmarks === 0
     ? 0
     : (completedCheckmarks / totalCheckmarks) * 100
-
-  /* Function to collect the weekly stats for Weekly Report Modal */ 
-  const weeklyStats = getWeeklyStats(habits, completions, weekDays)
-  //The use state for the WeeklyModal is set to false
-  const [weeklyReport, setWeeklyReport] = useState<string | null>(null)
-  const [showWeeklyModal, setShowWeeklyModal] = useState(false)
+  
 
   if (!session) {
     return <p>Please log in to view your dashboard.</p>
   }
-
+  console.log('showWeeklyModal:', showWeeklyModal)
+  console.log('weeklyReport:', weeklyReport)
+  console.log('nextWeekMessage:', nextWeekMessage)
   return (
     <div className="min-h-screen bg-gray-100 p-4 max-w-4xl mx-auto">
       {/* Goal Card */}
@@ -454,13 +499,44 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Temporary button for weekly report modal */}
+      {/* <button
+        onClick={() => {
+          console.log('Test button clicked')
+          setShowWeeklyModal(true)
+        }}
+        className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded shadow-lg z-50"
+      >
+        Show Weekly Modal (Test)
+      </button> */}
+
       {/* Weekly Report Modal */}
-      {showWeeklyModal && weeklyReport && difficulty && nextWeekMessage && (
+      {showWeeklyModal && weeklyReport && nextWeekMessage && (
         <WeeklyReportModal
-          onClose={() => setShowWeeklyModal(false)}
+          onClose={async () => {
+            console.log('Modal closed')
+            setShowWeeklyModal(false)
+            
+            if (difficultyOverride && session?.user) {
+              console.log('Saving difficulty override:', difficultyOverride)
+              try {
+                await saveDifficultyOverride(
+                  supabase,
+                  session.user.id,
+                  difficultyOverride
+                )
+              } catch (error) {
+                console.error('Failed to persist difficulty choice', error)
+              }
+            }
+          }}
           stats={weeklyStats}
           summary={weeklyReport}
           nextWeekMessage={nextWeekMessage}
+          onDifficultySelect={(choice) => {
+            console.log('Difficulty override selected:', choice)
+            setDifficultyOverride(choice)
+          }}
         />
       )}
 

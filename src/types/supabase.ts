@@ -95,6 +95,30 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_difficulty_overrides: {
+        Row: {
+          id: string
+          user_id: string
+          week_start: string // or Date if you prefer
+          override: 'easier' | 'same' | 'harder'
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          week_start: string
+          override: 'easier' | 'same' | 'harder'
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          week_start?: string
+          override?: 'easier' | 'same' | 'harder'
+          created_at?: string | null
+        }
+        Relationships: []
+      }
 
     }
     Views: {

@@ -49,7 +49,12 @@ export function buildWeeklyReportPrompt(
     motivator: string
     message_to_future_self?: string
 }){
-    return `
+    return ` respond with only "This is a test" and add a random number from 1-100 after. `
+
+}
+/* ADD THE BOTTOM BACK INTO RETURN */
+
+/*
 This is a weekly progress report for a habit tracking app. The user’s goal details are:
 
 - Goal Title: ${goal.goal_title}
@@ -68,5 +73,4 @@ Based on this, generate:
 - A motivational message for the next week.
 
 Keep it positive (warm & inspirational), brief (under 100 words), and tailored to someone tracking personal goals.
-  `
-}
+ */
