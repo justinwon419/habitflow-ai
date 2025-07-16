@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+// import { supabase } from '@/lib/supabase'
 import { Github } from 'lucide-react'
 import { FcGoogle } from 'react-icons/fc'
 import { motion } from 'framer-motion'
@@ -10,6 +10,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Database } from '@/types/supabase'
 
 export default function LoginPage() {
+  const supabaseClient = createClientComponentClient<Database>()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isSignup, setIsSignup] = useState(false)
@@ -19,7 +20,7 @@ export default function LoginPage() {
   const router = useRouter()
   
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabaseClient.auth.getSession().then(({ data }) => {
       if (data.session) {
         router.push('/dashboard')
       }
@@ -29,10 +30,10 @@ export default function LoginPage() {
   const handleOAuthLogin = async (provider: 'github' | 'google') => {
     const origin = location.origin
 
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabaseClient.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${origin}/auth/callback`, // Custom callback handler
+        redirectTo: `${origin}/api/auth/callback`, // Custom callback handler
       },
     })
 
@@ -50,17 +51,15 @@ export default function LoginPage() {
       return
     }
 
-    const supabaseClient = createClientComponentClient<Database>()
-
     if (isSignup) {
-      const { error } = await supabase.auth.signUp({ email, password })
+      const { error } = await supabaseClient.auth.signUp({ email, password })
       if (error) {
         setError(error.message)
       } else {
         setMessage('Check your inbox to confirm your email')
       }
     } else {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password })
 
       if (error) {
         setError(error.message)
@@ -93,7 +92,7 @@ export default function LoginPage() {
       return
     }
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
       redirectTo: `${location.origin}/reset-password`, // You can create this route later
     })
 
