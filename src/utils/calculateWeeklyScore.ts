@@ -1,5 +1,5 @@
 import { SupabaseClient } from '@supabase/supabase-js'
-import { Database } from '@/types/supabase' // adjust the path as needed
+import { Database } from '@/types/supabase'
 import { startOfWeek, endOfWeek, format } from 'date-fns'
 
 export async function calculateWeeklyScore(supabase: SupabaseClient <Database>, userId: string, weekStart?: Date) {
