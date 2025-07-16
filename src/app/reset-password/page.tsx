@@ -7,53 +7,55 @@ import { useRouter } from 'next/navigation'
 export default function ResetPasswordPage() {
   const supabase = useSupabaseClient()
   const router = useRouter()
-
-  const [newPassword, setNewPassword] = useState('')
-  const [message, setMessage] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    // Supabase handles the magic link and sets the session
     const hash = window.location.hash
-    if (!hash.includes('type=recovery')) {
+
+    if (hash.includes('type=recovery')) {
+      const accessToken = new URLSearchParams(hash.substring(1)).get('access_token')
+      if (accessToken) {
+        supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: '', // leave blank, Supabase will refresh it
+        })
+      }
+    } else {
       router.replace('/login')
     }
-  }, [router])
+  }, [router, supabase])
 
-  const handleResetPassword = async () => {
+  const handleReset = async () => {
     setLoading(true)
-    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    const { error } = await supabase.auth.updateUser({ password })
 
-    if (error) {
-      setMessage('Failed to reset password. Try again.')
+    if (!error) {
+      router.push('/login')
     } else {
-      setMessage('Password reset successfully! You can now log in.')
-      setTimeout(() => router.push('/login'), 2000)
+      alert(error.message)
     }
 
     setLoading(false)
   }
 
   return (
-    <div className="max-w-md mx-auto mt-20 p-6 bg-white shadow-md rounded-md">
-      <h1 className="text-2xl font-bold mb-4 text-center text-[#367BDB]">
-        Reset Password
-      </h1>
+    <div className="max-w-md mx-auto mt-20 p-4 bg-white shadow rounded">
+      <h1 className="text-2xl font-bold mb-4">Reset Password</h1>
       <input
         type="password"
-        className="w-full p-2 border border-gray-300 rounded mb-4"
-        placeholder="Enter new password"
-        value={newPassword}
-        onChange={(e) => setNewPassword(e.target.value)}
+        placeholder="New Password"
+        value={password}
+        onChange={e => setPassword(e.target.value)}
+        className="w-full p-2 border rounded mb-4"
       />
       <button
-        onClick={handleResetPassword}
-        className="w-full bg-[#367BDB] text-white py-2 rounded hover:bg-blue-600 transition"
+        onClick={handleReset}
         disabled={loading}
+        className="w-full bg-blue-600 text-white p-2 rounded"
       >
         {loading ? 'Resetting...' : 'Reset Password'}
       </button>
-      {message && <p className="mt-4 text-center text-sm text-gray-700">{message}</p>}
     </div>
   )
 }
