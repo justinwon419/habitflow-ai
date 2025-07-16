@@ -1,5 +1,3 @@
-// app/goals/GoalForm.tsx
-
 'use client'
 
 import React from 'react'
@@ -16,7 +14,7 @@ interface GoalFormProps {
   futureMessage: string
   setFutureMessage: (value: string) => void
   onSubmit: () => void
-  onSubmitWithAI: () => void // <- New prop
+  onSubmitWithAI: () => void
   loading: boolean
 }
 
@@ -35,6 +33,17 @@ export default function GoalForm({
   onSubmitWithAI,
   loading,
 }: GoalFormProps) {
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-50">
+        <div className="loader mb-4" />
+        <p className="text-white text-lg font-semibold">
+          {goal_title ? 'Generating habits...' : 'Creating goal...'}
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-xl mx-auto p-6 bg-white rounded-xl shadow-md mt-10">
       <h1 className="text-2xl font-bold mb-6 text-[#367BDB]">Create Your Goal</h1>
@@ -42,14 +51,15 @@ export default function GoalForm({
       <label className="block mb-4">
         <span className="font-semibold">Goal Title</span>
         <input
-        type="text"
-        value={goal_title}
-        onChange={e => setGoalTitle(e.target.value)}
-        className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md"
-        placeholder="e.g. Become an Artist"
-        required
+          type="text"
+          value={goal_title}
+          onChange={e => setGoalTitle(e.target.value)}
+          className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md"
+          placeholder="e.g. Become an Artist"
+          required
         />
       </label>
+
       <label className="block mb-4">
         <span className="font-semibold">Goal Description</span>
         <input
@@ -97,7 +107,6 @@ export default function GoalForm({
         />
       </label>
 
-      {/* Submit buttons */}
       <div className="flex gap-4 mt-6">
         <button
           onClick={onSubmit}
