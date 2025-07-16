@@ -30,7 +30,6 @@ export default function DashboardPage() {
   const [newHabitTitle, setNewHabitTitle] = useState('')
   const [loading, setLoading] = useState(true)
 
-  const [difficulty, setDifficulty] = useState<DifficultyChange | null>(null)
   const [nextWeekMessage, setNextWeekMessage] = useState<string | null>(null)
 
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -176,7 +175,6 @@ export default function DashboardPage() {
 
         if (response.ok && data.summary) {
           setWeeklyReport(data.summary)
-          setDifficulty(difficulty)
           setNextWeekMessage(nextWeekMessage)
           setShowWeeklyModal(true)
           localStorage.setItem(thisWeekKey, 'true')

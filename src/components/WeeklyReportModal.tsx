@@ -62,7 +62,7 @@ export default function WeeklyReportModal({
           <p className="text-lg mb-4">{nextWeekMessage}</p>
           <div className="text-left">
             <p className="font-medium mb-2">
-              Would you like to adjust next week's difficulty?
+              Would you like to adjust next week&apos;s difficulty?
             </p>
             <div className="flex gap-2">
               {['easier', 'same', 'harder'].map((level) => (
