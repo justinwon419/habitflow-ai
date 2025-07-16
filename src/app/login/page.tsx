@@ -192,13 +192,10 @@ export default function LoginPage() {
               </p>
 
               {!isSignup && (
-                <p className="text-center text-sm mt-2">
-                  <button
-                    onClick={() => setShowReset(true)}
-                    className="text-gray-500 hover:underline"
-                  >
+                <p className="text-sm mt-4 text-center">
+                  <a href="/forgot-password" className="text-blue-600 hover:underline">
                     Forgot your password?
-                  </button>
+                  </a>
                 </p>
               )}
             </>

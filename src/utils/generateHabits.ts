@@ -15,7 +15,7 @@ export interface Habit {
 }
 
 export async function generateHabits(goal: GoalInput, difficulty?: 'harder' | 'same' | 'easier'): Promise<Habit[]> {
-  const prompt = generateHabitPrompt(goal)
+  const prompt = generateHabitPrompt(goal, difficulty)
 
   try {
     const response = await openai.chat.completions.create({

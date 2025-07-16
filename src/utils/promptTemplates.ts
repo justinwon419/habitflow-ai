@@ -3,7 +3,6 @@ import { GoalInput } from './generateHabits'
 import { DifficultyChange } from './nextDifficulty'
 
 export function generateHabitPrompt(goal: GoalInput, difficulty?: DifficultyChange): string {
-  const { goal_title, description, timeline, motivator, message_to_future_self } = goal
 
   const basePrompt = `
     You are a helpful assistant that creates daily habits to help a user achieve their personal goal.
