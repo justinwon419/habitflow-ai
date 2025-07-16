@@ -8,7 +8,6 @@ import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Database } from '@/types/supabase'
-import { useSession } from '@supabase/auth-helpers-react'
 
 export default function LoginPage() {
   const supabaseClient = createClientComponentClient<Database>()
