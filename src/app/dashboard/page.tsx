@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSupabaseClient, useSession } from '@supabase/auth-helpers-react'
-import { format, parseISO, startOfWeek, addDays, differenceInWeeks} from 'date-fns'
+import { format, parseISO, startOfWeek, addDays} from 'date-fns'
 import { Database } from '@/types/supabase'
 import { useRouter } from 'next/navigation'
 import { GoalInput } from '@/utils/generateHabits'
