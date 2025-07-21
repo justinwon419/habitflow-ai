@@ -711,7 +711,9 @@ export default function DashboardPage() {
               borderRadius: 8,
             }}
           />
-          <button className="text-base bg-[#4296F7] hover:bg-[#2f7de0] text-white px-3 py-2 rounded transition-colors duration-200">
+          <button 
+            onClick={addHabit}
+            className="text-base bg-[#4296F7] hover:bg-[#2f7de0] text-white px-3 py-2 rounded transition-colors duration-200">
             Add Habit
           </button>
 
