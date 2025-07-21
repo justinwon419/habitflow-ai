@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSupabaseClient, useSession } from '@supabase/auth-helpers-react'
-import { format, parseISO, startOfWeek, addDays} from 'date-fns'
+import { format, parseISO, startOfWeek, addDays, differenceInWeeks} from 'date-fns'
 import { Database } from '@/types/supabase'
 import { useRouter } from 'next/navigation'
 import { GoalInput } from '@/utils/generateHabits'
@@ -11,6 +11,7 @@ import { getWeeklyStats, calculateWeeklyScore } from '@/utils/stats'
 import { getNextWeekDifficultyChange, getEncouragementMessage } from '@/utils/nextDifficulty'
 import { saveDifficultyOverride } from '@/utils/saveDifficultyOverride'
 import {toast} from 'sonner'
+import GoalProgressCircle from '@/components/GoalProgressCircle'
 
 type Habit = Database['public']['Tables']['habits']['Row'] & {
   isEditing?: boolean
@@ -552,11 +553,21 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-100 p-4 max-w-4xl mx-auto">
       {/* Goal Card */}
       {activeGoal && (
-        <div className="bg-white p-4 rounded-lg shadow mb-4">
+        <div className="bg-white p-4 rounded-lg shadow mb-4 relative">
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-lg font-bold">
               Current Goal: {activeGoal.goal_title}
             </h2>
+
+            {/* Circular Progress Bar */}
+            <div className="absolute top-2 right-2">
+              <GoalProgressCircle createdAt={activeGoal.created_at} timeline={activeGoal.timeline} />
+            </div>
+          </div>
+          <p><strong>Description:</strong> {activeGoal.description}</p>
+          <p><strong>Timeline:</strong> {activeGoal.timeline}</p>
+          <p><strong>Motivator:</strong> {activeGoal.motivator}</p>
+          <div className="mt-2">
             <button
               className="text-sm bg-[#367BDB] text-white px-3 py-1 rounded hover:bg-blue-600"
               onClick={() => {
@@ -564,12 +575,9 @@ export default function DashboardPage() {
                 setIsModalOpen(true)
               }}
             >
-              Edit
+              Edit Goal
             </button>
           </div>
-          <p><strong>Description:</strong> {activeGoal.description}</p>
-          <p><strong>Timeline:</strong> {activeGoal.timeline}</p>
-          <p><strong>Motivator:</strong> {activeGoal.motivator}</p>
         </div>
       )}
 

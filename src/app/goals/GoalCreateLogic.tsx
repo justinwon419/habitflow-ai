@@ -7,6 +7,23 @@ import { useRouter } from 'next/navigation'
 import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react'
 import { Database } from '@/types/supabase'
 import GoalForm from './GoalForm'
+import { addMonths, addWeeks, addYears } from 'date-fns'
+
+function calculateTargetEnd(createdAt: Date, timeline: string): Date {
+  const lower = timeline.toLowerCase().trim()
+  const number = parseInt(lower.split(' ')[0], 10)
+  if (isNaN(number)) throw new Error('Invalid timeline')
+
+  if (lower.includes('month')) {
+    return addMonths(createdAt, number)
+  } else if (lower.includes('week')) {
+    return addWeeks(createdAt, number)
+  } else if (lower.includes('year')) {
+    return addYears(createdAt, number)
+  }
+
+  throw new Error('Unrecognized timeline format')
+}
 
 export default function GoalCreateLogic() {
   const [goal_title, setGoalTitle] = useState('')
@@ -28,6 +45,8 @@ export default function GoalCreateLogic() {
     }
 
     setLoading(true)
+    const createdAt = new Date()
+    const targetEnd = calculateTargetEnd(createdAt, timeline)
 
     const { error } = await supabase.from('goals').insert([
       {
@@ -37,7 +56,8 @@ export default function GoalCreateLogic() {
         timeline,
         motivator,
         future_message: futureMessage,
-        created_at: new Date().toISOString(),
+        created_at: createdAt.toISOString(),
+        target_end: targetEnd.toISOString(),
       },
     ])
 
@@ -60,6 +80,9 @@ export default function GoalCreateLogic() {
     setLoading(true)
 
     try {
+      const createdAt = new Date()
+      const targetEnd = calculateTargetEnd(createdAt, timeline)
+
       // 1. Save the goal to Supabase
       const { data, error } = await supabase.from('goals').insert([
         {
@@ -69,7 +92,8 @@ export default function GoalCreateLogic() {
           timeline,
           motivator,
           future_message: futureMessage,
-          created_at: new Date().toISOString(),
+          created_at: createdAt.toISOString(),
+          target_end: targetEnd.toISOString(),
         },
       ]).select().single()
 
