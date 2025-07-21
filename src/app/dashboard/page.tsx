@@ -550,17 +550,15 @@ export default function DashboardPage() {
   console.log('weeklyReport:', weeklyReport)
   console.log('nextWeekMessage:', nextWeekMessage)
   return (
-    <div className="min-h-screen bg-gray-100 p-4 max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-100 px-4 sm:px-6 py-4 max-w-4xl mx-auto">
       {/* Goal Card */}
       {activeGoal && (
         <div className="bg-white p-4 rounded-lg shadow mb-4 relative">
-          <div className="flex justify-between items-center mb-2">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2 gap-2">
             <h2 className="text-lg font-bold">
               Current Goal: {activeGoal.goal_title}
             </h2>
-
-            {/* Circular Progress Bar */}
-            <div className="absolute top-2 right-2">
+            <div className="sm:static absolute top-2 right-2">
               <GoalProgressCircle createdAt={activeGoal.created_at} timeline={activeGoal.timeline} />
             </div>
           </div>
@@ -569,7 +567,7 @@ export default function DashboardPage() {
           <p><strong>Motivator:</strong> {activeGoal.motivator}</p>
           <div className="mt-2">
             <button
-              className="text-sm bg-[#4296F7] hover:bg-[#2f7de0] text-white px-2 py-1 rounded transition-colors duration-200"
+              className="text-sm bg-[#4296F7] hover:bg-[#2f7de0] text-white px-3 py-1 rounded transition-colors duration-200"
               onClick={() => {
                 setEditedGoal(activeGoal)
                 setIsModalOpen(true)
@@ -581,146 +579,26 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Temporary button for weekly report modal */}
-      {/* <button
-        onClick={() => {
-          console.log('Test button clicked')
-          setShowWeeklyModal(true)
-        }}
-        className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded shadow-lg z-50"
-      >
-        Show Weekly Modal (Test)
-      </button> */}
-
-      {/* Weekly Report Modal */}
-      {showWeeklyModal && weeklyReport && nextWeekMessage && (
-        <WeeklyReportModal
-          onClose={async () => {
-            console.log('Modal closed')
-            setShowWeeklyModal(false)
-            
-            if (difficultyOverride && session?.user) {
-              console.log('Saving difficulty override:', difficultyOverride)
-              try {
-                await saveDifficultyOverride(
-                  supabase,
-                  session.user.id,
-                  difficultyOverride
-                )
-              } catch (error) {
-                console.error('Failed to persist difficulty choice', error)
-              }
-            }
-          }}
-          stats={weeklyStats}
-          summary={weeklyReport}
-          nextWeekMessage={nextWeekMessage}
-          onDifficultySelect={(choice) => {
-            console.log('Difficulty override selected:', choice)
-            setDifficultyOverride(choice)
-          }}
-        />
-      )}
-
-      {/* Goal Edit Modal */}
-      {isModalOpen && editedGoal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full border-t-16 border-[#4296F7]">
-            <h2 className="text-3xl font-bold mb-4 text-[#4296F7]">Edit Goal</h2>
-
-
-            <div className="mb-4">
-              <label className="block font-semibold mb-1">Title</label>
-              <input
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                value={editedGoal.goal_title}
-                onChange={e => setEditedGoal({ ...editedGoal, goal_title: e.target.value })}
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="block font-semibold mb-1">Description</label>
-              <input
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                value={editedGoal.description}
-                onChange={e => setEditedGoal({ ...editedGoal, description: e.target.value })}
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="block font-semibold mb-1">Timeline</label>
-              <input
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                value={editedGoal.timeline}
-                onChange={e => setEditedGoal({ ...editedGoal, timeline: e.target.value })}
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="block font-semibold mb-1">Motivator</label>
-              <textarea
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                value={editedGoal.motivator}
-                onChange={e => setEditedGoal({ ...editedGoal, motivator: e.target.value })}
-              />
-            </div>
-
-            <div className="flex justify-between">
-              <button
-                className="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded"
-                onClick={() => setIsModalOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="bg-[#4296F7] hover:bg-[#2f7de0] text-white px-2 py-1 rounded transition-colors duration-200"
-                onClick={handleSaveEditedGoal}
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Loading Overlay: show only when regenerating new AI-Goals */}
-      {isRegeneratingHabits && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-50">
-          <div className="loader"></div>
-          <p className="text-white text-lg font-semibold">Regenerating habits...</p>
-        </div>
-      )}
-
       {/* New Habit Card */}
       <header className="bg-white p-4 rounded-lg shadow mb-4 mt-4">
-        <h1 style= {{fontWeight:"bold"}}>
-          New habit
-        </h1>
-
-        <div style={{ display: 'flex', gap: 16,paddingTop:"4px"}}>
+        <h1 className="font-bold text-lg mb-2">New Habit</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <input
             type="text"
             placeholder="Enter a brief habit description"
             value={newHabitTitle}
             onChange={e => setNewHabitTitle(e.target.value)}
-            style={{
-              width: '84%',
-              padding: 8,
-              backgroundColor: 'white',
-              border: '1px solid #D9D9D9',
-              borderRadius: 8,
-            }}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
           />
-          <button 
+          <button
             onClick={addHabit}
-            className="text-base bg-[#4296F7] hover:bg-[#2f7de0] text-white px-3 py-2 rounded transition-colors duration-200">
+            className="text-base bg-[#4296F7] hover:bg-[#2f7de0] text-white px-4 py-2 rounded-md transition-colors duration-200"
+          >
             Add Habit
           </button>
-
         </div>
       </header>
-      <hr className="my-4 border-t border-black" />
-      
+
       {/* Daily Progress Bar */}
       {habits.length > 0 && (
         <div className="bg-white p-4 rounded-lg shadow mb-4 mt-4">
@@ -737,44 +615,25 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* The Habit Dashboard Card: Loading State, Empty State, Habit Cards, Streaks */}
-        {loading ? (
-          <p 
-            style={{
-             padding: "16px" 
-            }}
-          >
-            Loading...</p>
-        ) : habits.length === 0 ? (
-          <p
-            style={{
-             padding: "16px" 
-            }}
-          >  
-            You have no habits yet.</p>
-        ) : (
-          <ul style={{ marginTop: 20}}>
-            {habits.map(habit => (
-              <li
-                key={habit.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  marginBottom: 20,
-                  borderBottom: '1px solid #eee',
-                  backgroundColor: "white",
-                  padding: "16px",
-                  paddingBottom: "8px",
-                  borderRadius: "8px",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={isHabitCompletedOn(habit.id, today)}
-                  onChange={() => toggleCompletion(habit.id)}
-                  style={{ marginRight: 10 }}
-                />
-
+      {/* Habit List */}
+      {loading ? (
+        <p className="p-4">Loading...</p>
+      ) : habits.length === 0 ? (
+        <p className="p-4">You have no habits yet.</p>
+      ) : (
+        <ul className="mt-5 space-y-4">
+          {habits.map(habit => (
+            <li
+              key={habit.id}
+              className="bg-white rounded-lg shadow p-4 flex flex-col sm:flex-row sm:items-start gap-4"
+            >
+              <input
+                type="checkbox"
+                checked={isHabitCompletedOn(habit.id, today)}
+                onChange={() => toggleCompletion(habit.id)}
+                className="mt-1 sm:mt-0"
+              />
+              <div className="flex-1">
                 {habit.isEditing ? (
                   <>
                     <input
@@ -782,109 +641,67 @@ export default function DashboardPage() {
                       value={habit.editTitle}
                       onChange={e => {
                         const newTitle = e.target.value
-                        setHabits(habits.map(h =>
-                          h.id === habit.id ? { ...h, editTitle: newTitle } : h
-                        ))
+                        setHabits(habits.map(h => h.id === habit.id ? { ...h, editTitle: newTitle } : h))
                       }}
-                      style={{
-                        width: '100%',
-                        padding: 8,
-                        backgroundColor: 'white',
-                        border: '1px solid #D9D9D9',
-                        borderRadius: 8,
-                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
                     />
-                    <button 
-                      onClick={() => saveHabit(habit.id)} 
-                      style={{ 
-                        marginLeft: 16, 
-                        width: '64px',
-                        padding: 8,
-                        backgroundColor: '#367BDB',
-                        borderRadius: 8,
-                        color: 'white',
-                        }}>
-                      Save
-                    </button>
-                    <button 
-                      onClick={() => cancelEdit(habit.id)} 
-                      style={{ 
-                        marginLeft: 16, 
-                        width: '64px',
-                        padding: 8,
-                        backgroundColor: '#F0F0F0',
-                        borderRadius: 8,
-                        color: 'red',
-                        }}>
-                      Cancel
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => saveHabit(habit.id)}
+                        className="bg-[#367BDB] text-white px-4 py-2 rounded-md"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => cancelEdit(habit.id)}
+                        className="bg-gray-200 text-red-600 px-4 py-2 rounded-md"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </>
                 ) : (
                   <>
-                    <div style={{ flexGrow: 1 }}>
-                      <strong>{habit.title}</strong>
-                      {getCurrentStreak(habit.id) > 0 && (
-                        <div style={{ fontSize: '0.8em', color: '#555', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span>🔥</span>
-                          <span>
-                            Streak: {getCurrentStreak(habit.id)} day{getCurrentStreak(habit.id) === 1 ? '' : 's'}
-                          </span>
-                        </div>
-                      )}
+                    <div className="font-semibold">{habit.title}</div>
+                    {getCurrentStreak(habit.id) > 0 && (
+                      <div className="text-sm text-gray-600 flex items-center gap-1">
+                        <span>🔥</span>
+                        <span>Streak: {getCurrentStreak(habit.id)} day{getCurrentStreak(habit.id) === 1 ? '' : 's'}</span>
+                      </div>
+                    )}
 
-                      <div style={{ display: 'flex', gap: 6, marginTop: 8, alignItems: 'center' }}>
-                        {weekDayLabels.map((label, idx) => (
-                          <span key={idx} style={{ fontSize: 12, width: 16, textAlign: 'center' }}>
-                            {label}
-                          </span>
-                        ))}
-                      </div>
-                      <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-                        {weekDays.map((date) => (
-                          <div
-                            key={date}
-                            title={new Date(date).toLocaleDateString(undefined, { weekday: 'short' })}
-                            style={{
-                              width: 16,
-                              height: 16,
-                              borderRadius: '50%',
-                              backgroundColor: isHabitCompletedOn(habit.id, date) ? 'green' : '#F0F0F0',
-                              border: date === today ? '2px solid #367BDB' : 'none',
-                            }}
-                          />
-                        ))}
-                      </div>
+                    <div className="flex gap-1 mt-2">
+                      {weekDays.map((date, idx) => (
+                        <div
+                          key={idx}
+                          className={`w-4 h-4 rounded-full border ${date === today ? 'border-[#367BDB]' : 'border-transparent'}`}
+                          style={{ backgroundColor: isHabitCompletedOn(habit.id, date) ? 'green' : '#F0F0F0' }}
+                        />
+                      ))}
                     </div>
 
-                    <button 
-                      onClick={() => startEdit(habit.id)} 
-                      style={{ 
-                        marginLeft: 16, 
-                        width: '64px',
-                        padding: 8,
-                        backgroundColor: '#F0F0F0',
-                        borderRadius: 8,
-                        color: 'black',
-                        }}>
-                      Edit
-                    </button>
-                    <button 
-                      onClick={() => deleteHabit(habit.id)} 
-                      style={{ marginLeft: 16, 
-                        width: '64px',
-                        padding: 8,
-                        backgroundColor: '#F0F0F0',
-                        borderRadius: 8,
-                        color: 'red'
-                        }}>
-                      Delete
-                    </button>
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        onClick={() => startEdit(habit.id)}
+                        className="bg-gray-200 text-black px-4 py-2 rounded-md"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => deleteHabit(habit.id)}
+                        className="bg-gray-200 text-red-600 px-4 py-2 rounded-md"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </>
                 )}
-              </li>
-            ))}
-          </ul>
-        )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
+
 }
