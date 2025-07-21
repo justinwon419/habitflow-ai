@@ -569,7 +569,7 @@ export default function DashboardPage() {
           <p><strong>Motivator:</strong> {activeGoal.motivator}</p>
           <div className="mt-2">
             <button
-              className="text-sm bg-[#367BDB] text-white px-3 py-1 rounded hover:bg-blue-600"
+              className="text-sm bg-[#4296F7] hover:bg-[#2f7de0] text-white px-2 py-1 rounded transition-colors duration-200"
               onClick={() => {
                 setEditedGoal(activeGoal)
                 setIsModalOpen(true)
@@ -625,8 +625,9 @@ export default function DashboardPage() {
       {/* Goal Edit Modal */}
       {isModalOpen && editedGoal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-            <h2 className="text-lg font-bold mb-4">Edit Goal</h2>
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full border-t-16 border-[#4296F7]">
+            <h2 className="text-3xl font-bold mb-4 text-[#4296F7]">Edit Goal</h2>
+
 
             <div className="mb-4">
               <label className="block font-semibold mb-1">Title</label>
@@ -666,13 +667,13 @@ export default function DashboardPage() {
 
             <div className="flex justify-between">
               <button
-                className="bg-gray-300 text-black px-4 py-2 rounded"
+                className="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded"
                 onClick={() => setIsModalOpen(false)}
               >
                 Cancel
               </button>
               <button
-                className="bg-[#367BDB] text-white px-4 py-2 rounded"
+                className="bg-[#4296F7] hover:bg-[#2f7de0] text-white px-2 py-1 rounded transition-colors duration-200"
                 onClick={handleSaveEditedGoal}
               >
                 Save Changes
@@ -703,26 +704,17 @@ export default function DashboardPage() {
             value={newHabitTitle}
             onChange={e => setNewHabitTitle(e.target.value)}
             style={{
-              width: '100%',
+              width: '84%',
               padding: 8,
               backgroundColor: 'white',
               border: '1px solid #D9D9D9',
               borderRadius: 8,
             }}
           />
-          <button
-            onClick={addHabit}
-            style={{
-              width: '20%',
-              padding: 8,
-              marginLeft: 8,
-              backgroundColor: '#367BDB',
-              borderRadius: 8,
-              color: 'white',
-            }}
-          >
-            Add habit
+          <button className="text-base bg-[#4296F7] hover:bg-[#2f7de0] text-white px-3 py-2 rounded transition-colors duration-200">
+            Add Habit
           </button>
+
         </div>
       </header>
       <hr className="my-4 border-t border-black" />

@@ -19,15 +19,20 @@ export default function DashboardLayout({
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: 'auto' }}>
-      <header style = {{backgroundColor:"#367BDB", borderTopLeftRadius:"8px",borderTopRightRadius:"8px"}} 
-        className="flex items-center justify-between px-6 py-4 shadow-sm border-b">
-        <h1 className="text-3xl font-extrabold text-[#FFFFFF] tracking-tight">
-          HabitFlow Dashboard
+    <div style={{ padding: '20px', maxWidth: '800px', margin: 'auto', backgroundColor: 'white' }}>
+      <header
+        className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 shadow-sm border-b border-[#DDE3EB] rounded-t-lg"
+        style={{ backgroundColor: '#4296F7', color: '#FFFFFF' }}
+      >
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-center sm:text-left">
+          DayOne Dashboard
         </h1>
         <button
-          style={{backgroundColor: '#F0F0F0', padding: '8px', borderRadius: '8px'}} 
-          onClick={handleLogout}>Logout</button>
+          onClick={handleLogout}
+          className="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded"
+        >
+          Logout
+        </button>
       </header>
       <main>{children}</main>
     </div>

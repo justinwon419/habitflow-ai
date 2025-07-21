@@ -40,7 +40,7 @@ export default function GoalProgressCircle({ createdAt, timeline }: GoalProgress
             cx="50"
             cy="50"
             r="45"
-            stroke="#367BDB"
+            stroke="#4296F7"
             strokeWidth="10"
             fill="none"
             strokeDasharray={`${(progress * 282.6) / 100}, 282.6`}
@@ -48,7 +48,7 @@ export default function GoalProgressCircle({ createdAt, timeline }: GoalProgress
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-sm">
-          <span className="font-bold text-m text-[#367BDB]">Week {currentWeek}</span>
+          <span className="font-bold text-m text-[#4296F7]">Week {currentWeek}</span>
           <span className="text-gray-600 text-xs">of {totalWeeks}</span>
         </div>
       </div>

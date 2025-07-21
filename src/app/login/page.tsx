@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-// import { supabase } from '@/lib/supabase'
 import { Github } from 'lucide-react'
 import { FcGoogle } from 'react-icons/fc'
 import { motion } from 'framer-motion'
@@ -18,7 +17,7 @@ export default function LoginPage() {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  
+
   useEffect(() => {
     supabaseClient.auth.getSession().then(({ data }) => {
       if (data.session) {
@@ -33,13 +32,11 @@ export default function LoginPage() {
     const { error } = await supabaseClient.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${origin}/auth/callback`, // Custom callback handler
+        redirectTo: `${origin}/auth/callback`,
       },
     })
 
-    if (error) {
-      setError(error.message)
-    }
+    if (error) setError(error.message)
   }
 
   const handleEmailAuth = async () => {
@@ -53,18 +50,13 @@ export default function LoginPage() {
 
     if (isSignup) {
       const { error } = await supabaseClient.auth.signUp({ email, password })
-      if (error) {
-        setError(error.message)
-      } else {
-        setMessage('Check your inbox to confirm your email')
-      }
+      if (error) setError(error.message)
+      else setMessage('Check your inbox to confirm your email')
     } else {
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password })
-
       if (error) {
         setError(error.message)
       } else {
-        // ✅ Check if the user has goals and route accordingly
         const user = data.user
         if (user) {
           const { data: goals } = await supabaseClient
@@ -73,11 +65,7 @@ export default function LoginPage() {
             .eq('user_id', user.id)
             .limit(1)
 
-          if (goals && goals.length > 0) {
-            router.push('/dashboard')
-          } else {
-            router.push('/goals/new')
-          }
+          router.push(goals && goals.length > 0 ? '/dashboard' : '/goals/new')
         }
       }
     }
@@ -93,7 +81,7 @@ export default function LoginPage() {
     }
 
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: `${location.origin}/reset-password`, // You can create this route later
+      redirectTo: `${location.origin}/reset-password`,
     })
 
     if (error) setError(error.message)
@@ -101,15 +89,15 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f8f9fc] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#0E0E0E] px-4">
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="w-full max-w-sm bg-white shadow-xl rounded-2xl p-8 border border-gray-200"
+        className="w-full max-w-sm bg-[#1F1F1F] shadow-2xl rounded-2xl p-8 border border-[#2C2C2C]"
       >
-        <h1 className="text-2xl font-bold text-center text-[#367BDB] mb-6">
-          Welcome to HabitFlow
+        <h1 className="text-2xl font-bold text-center text-[#1C86FF] mb-6">
+          Welcome to DayOne
         </h1>
 
         <div className="space-y-4">
@@ -130,13 +118,13 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <div className="mt-6 border-t pt-6">
+        <div className="mt-6 border-t border-[#333] pt-6">
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            className="w-full px-4 py-2 mb-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#367BDB]"
+            className="w-full px-4 py-2 mb-3 border border-[#333] rounded-md bg-[#1F1F1F] text-white placeholder-[#717C89] focus:outline-none focus:ring-2 focus:ring-[#1C86FF]"
           />
           {!showReset && (
             <input
@@ -144,29 +132,25 @@ export default function LoginPage() {
               placeholder="Password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="w-full px-4 py-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#367BDB]"
+              className="w-full px-4 py-2 mb-4 border border-[#333] rounded-md bg-[#1F1F1F] text-white placeholder-[#717C89] focus:outline-none focus:ring-2 focus:ring-[#1C86FF]"
             />
           )}
 
-          {error && (
-            <p className="text-sm text-red-600 mb-3 text-center">{error}</p>
-          )}
-          {message && (
-            <p className="text-sm text-green-600 mb-3 text-center">{message}</p>
-          )}
+          {error && <p className="text-sm text-red-500 mb-3 text-center">{error}</p>}
+          {message && <p className="text-sm text-green-400 mb-3 text-center">{message}</p>}
 
           {showReset ? (
             <>
               <button
                 onClick={handlePasswordReset}
-                className="w-full bg-[#367BDB] text-white py-2 rounded-lg hover:bg-blue-600 transition"
+                className="w-full bg-[#1C86FF] text-white py-2 rounded-lg hover:bg-[#409EFF] transition"
               >
                 Send reset link
               </button>
               <p className="text-center text-sm mt-4">
                 <button
                   onClick={() => setShowReset(false)}
-                  className="text-[#367BDB] hover:underline font-medium"
+                  className="text-[#89C6FF] hover:underline font-medium"
                 >
                   Back to login
                 </button>
@@ -176,24 +160,24 @@ export default function LoginPage() {
             <>
               <button
                 onClick={handleEmailAuth}
-                className="w-full bg-[#367BDB] text-white py-2 rounded-lg hover:bg-blue-600 transition"
+                className="w-full bg-[#1C86FF] text-white py-2 rounded-lg hover:bg-[#409EFF] transition"
               >
                 {isSignup ? 'Sign up with Email' : 'Log in with Email'}
               </button>
 
-              <p className="text-center text-sm mt-4">
+              <p className="text-center text-sm mt-4 text-[#B0B6BF]">
                 {isSignup ? 'Already have an account?' : 'Need an account?'}{' '}
                 <button
                   onClick={() => setIsSignup(!isSignup)}
-                  className="text-[#367BDB] hover:underline font-medium"
+                  className="text-[#89C6FF] hover:underline font-medium"
                 >
                   {isSignup ? 'Log in' : 'Sign up'}
                 </button>
               </p>
 
               {!isSignup && (
-                <p className="text-sm mt-4 text-center">
-                  <a href="/forgot-password" className="text-blue-600 hover:underline">
+                <p className="text-sm mt-4 text-center text-[#717C89]">
+                  <a href="/forgot-password" className="text-[#89C6FF] hover:underline">
                     Forgot your password?
                   </a>
                 </p>
