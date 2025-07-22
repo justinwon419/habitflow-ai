@@ -12,7 +12,6 @@ import { getNextWeekDifficultyChange, getEncouragementMessage } from '@/utils/ne
 import { saveDifficultyOverride } from '@/utils/saveDifficultyOverride'
 import {toast} from 'sonner'
 import GoalProgressCircle from '@/components/GoalProgressCircle'
-import { motion } from 'framer-motion'
 
 type Habit = Database['public']['Tables']['habits']['Row'] & {
   isEditing?: boolean
