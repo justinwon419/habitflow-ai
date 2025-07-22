@@ -768,10 +768,7 @@ export default function DashboardPage() {
                   isCompleted ? 'bg-green-100' : 'bg-white'
                 } active:scale-95 relative`}
                 onClick={(e) => {
-                  if (
-                    !habit.isEditing &&
-                    !(e.target as HTMLElement).closest('.habit-menu')
-                  ) {
+                  if (!habit.isEditing && !(e.target as HTMLElement).closest('.habit-menu')) {
                     toggleCompletion(habit.id)
                   }
                 }}
@@ -794,86 +791,122 @@ export default function DashboardPage() {
                   }
                 }}
               >
-                <div className="flex justify-between items-start gap-2">
-                  <div className="flex-grow">
-                    <div className="font-semibold text-base">{habit.title}</div>
-                    {getCurrentStreak(habit.id) > 0 && (
-                      <div className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                        <span>🔥</span>
-                        <span>
-                          Streak: {getCurrentStreak(habit.id)} day
-                          {getCurrentStreak(habit.id) !== 1 && 's'}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Weekly Tracker */}
-                    <div className="mt-2">
-                      <div className="flex gap-1 text-xs text-gray-500">
-                        {weekDayLabels.map((label, idx) => (
-                          <span key={idx} className="w-5 text-center leading-none">
-                            {label}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex gap-1 mt-1">
-                        {weekDays.map((date) => (
-                          <div
-                            key={date}
-                            className="w-4 h-4 rounded-full"
-                            style={{
-                              backgroundColor: isHabitCompletedOn(habit.id, date)
-                                ? 'green'
-                                : '#F0F0F0',
-                              border:
-                                date === today ? '2px solid #367BDB' : '1px solid #ccc',
-                            }}
-                          />
-                        ))}
-                      </div>
+                {habit.isEditing ? (
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full">
+                    <input
+                      type="text"
+                      value={habit.editTitle}
+                      onChange={(e) => {
+                        const newTitle = e.target.value
+                        setHabits(
+                          habits.map((h) =>
+                            h.id === habit.id ? { ...h, editTitle: newTitle } : h
+                          )
+                        )
+                      }}
+                      className="flex-grow px-3 py-2 border border-gray-300 rounded"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => saveHabit(habit.id)}
+                        className="px-3 py-2 bg-[#367BDB] text-white rounded hover:bg-blue-600 transition"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => cancelEdit(habit.id)}
+                        className="px-3 py-2 bg-gray-200 text-red-600 rounded hover:bg-gray-300 transition"
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </div>
+                ) : (
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex-grow">
+                      <div className="font-semibold text-base">{habit.title}</div>
+                      {getCurrentStreak(habit.id) > 0 && (
+                        <div className="text-sm text-gray-600 flex items-center gap-1 mt-1">
+                          <span>🔥</span>
+                          <span>
+                            Streak: {getCurrentStreak(habit.id)} day
+                            {getCurrentStreak(habit.id) !== 1 && 's'}
+                          </span>
+                        </div>
+                      )}
 
-                  {/* Ellipsis Menu */}
-                  <div
-                    className="habit-menu relative"
-                    ref={isMenuOpen ? menuRef : null}
-                  >
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setOpenMenuId((prev) => (prev === habit.id ? null : habit.id))
-                      }}
-                      className="text-gray-500 text-xl px-2 rounded hover:bg-gray-200"
-                    >
-                      ⋯
-                    </button>
-                    {isMenuOpen && (
-                      <div className="absolute right-0 mt-2 w-28 bg-white border border-gray-200 rounded shadow-lg z-10">
-                        <button
-                          onClick={() => {
-                            setOpenMenuId(null)
-                            startEdit(habit.id)
-                          }}
-                          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => {
-                            setOpenMenuId(null)
-                            if (window.confirm('Delete this habit?')) {
-                              deleteHabit(habit.id)
-                            }
-                          }}
-                          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100"
-                        >
-                          Delete
-                        </button>
+                      {/* Weekly Tracker */}
+                      <div className="mt-2">
+                        <div className="flex gap-1 text-xs text-gray-500">
+                          {weekDayLabels.map((label, idx) => (
+                            <span key={idx} className="w-5 text-center leading-none">
+                              {label}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="flex gap-1 mt-1">
+                          {weekDays.map((date) => (
+                            <div
+                              key={date}
+                              className="w-4 h-4 rounded-full"
+                              style={{
+                                backgroundColor: isHabitCompletedOn(habit.id, date)
+                                  ? 'green'
+                                  : '#F0F0F0',
+                                border:
+                                  date === today
+                                    ? '2px solid #367BDB'
+                                    : '1px solid #ccc',
+                              }}
+                            />
+                          ))}
+                        </div>
                       </div>
-                    )}
+                    </div>
+
+                    {/* Ellipsis Dropdown */}
+                    <div
+                      className="habit-menu relative"
+                      ref={isMenuOpen ? menuRef : null}
+                    >
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setOpenMenuId((prev) =>
+                            prev === habit.id ? null : habit.id
+                          )
+                        }}
+                        className="text-gray-500 text-xl px-2 rounded hover:bg-gray-200"
+                      >
+                        ⋯
+                      </button>
+                      {isMenuOpen && (
+                        <div className="absolute right-0 mt-2 w-28 bg-white border border-gray-200 rounded shadow-lg z-10">
+                          <button
+                            onClick={() => {
+                              setOpenMenuId(null)
+                              startEdit(habit.id)
+                            }}
+                            className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => {
+                              setOpenMenuId(null)
+                              if (window.confirm('Delete this habit?')) {
+                                deleteHabit(habit.id)
+                              }
+                            }}
+                            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </li>
             )
           })}
