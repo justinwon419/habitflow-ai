@@ -24,15 +24,16 @@ export default function DashboardLayout({
         className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 shadow-sm border-b border-[#DDE3EB] rounded-t-lg"
         style={{ backgroundColor: '#4296F7', color: '#FFFFFF' }}
       >
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-center sm:text-left">
+        <h1 className="text-4xl font-extrabold tracking-tight text-center sm:text-left">
           DayOne Dashboard
         </h1>
-        <button
+        {/* Logout Button (move this somewhere else later) */}
+        {/* <button
           onClick={handleLogout}
           className="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded"
         >
           Logout
-        </button>
+        </button> */}
       </header>
       <main>{children}</main>
     </div>

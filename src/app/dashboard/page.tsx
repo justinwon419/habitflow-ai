@@ -554,20 +554,29 @@ export default function DashboardPage() {
       {/* Goal Card */}
       {activeGoal && (
         <div className="bg-white p-4 rounded-lg shadow mb-4 relative">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2 gap-2">
-            <h2 className="text-lg font-bold">
+
+          {/* Top-right circular progress */}
+          <div className="absolute top-4 right-4">
+            <GoalProgressCircle
+              createdAt={activeGoal.created_at}
+              timeline={activeGoal.timeline}
+            />
+          </div>
+
+          {/* Text content with padding to avoid overlapping the circle */}
+          <div className="pr-24">
+            <h2 className="text-lg font-bold mb-2">
               Current Goal: {activeGoal.goal_title}
             </h2>
-            <div className="self-end sm:self-auto">
-              <GoalProgressCircle createdAt={activeGoal.created_at} timeline={activeGoal.timeline} />
-            </div>
+            <p><strong>Description:</strong> {activeGoal.description}</p>
+            <p><strong>Timeline:</strong> {activeGoal.timeline}</p>
+            <p><strong>Motivator:</strong> {activeGoal.motivator}</p>
           </div>
-          <p><strong>Description:</strong> {activeGoal.description}</p>
-          <p><strong>Timeline:</strong> {activeGoal.timeline}</p>
-          <p><strong>Motivator:</strong> {activeGoal.motivator}</p>
-          <div className="mt-2">
+
+          {/* Bottom-right Edit button (mobile full-width, desktop right-aligned) */}
+          <div className="mt-4 flex justify-end">
             <button
-              className="text-sm bg-[#4296F7] hover:bg-[#2f7de0] text-white px-3 py-2 rounded transition-colors duration-200 w-full sm:w-auto"
+              className="absolute bottom-4 right-4 text-base bg-[#4296F7] hover:bg-[#2f7de0] text-white px-2 py-1 rounded transition-colors duration-200 w-full sm:w-24"
               onClick={() => {
                 setEditedGoal(activeGoal)
                 setIsModalOpen(true)
