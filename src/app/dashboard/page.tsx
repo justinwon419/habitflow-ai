@@ -564,19 +564,6 @@ export default function DashboardPage() {
             />
           </div>
 
-          {/* Bottom-right Edit button (mobile full-width, desktop right-aligned) */}
-          <div className="mt-4 flex justify-end">
-            <button
-              className="absolute bottom-4 right-4 text-base bg-[#4296F7] hover:bg-[#2f7de0] text-white px-2 py-1 rounded transition-colors duration-200 w-full sm:w-auto"
-              onClick={() => {
-                setEditedGoal(activeGoal)
-                setIsModalOpen(true)
-              }}
-            >
-              Edit Goal
-            </button>
-          </div>
-
           {/* Text content with padding to avoid overlapping the circle */}
           <div className="pr-24">
             <h2 className="text-lg font-bold mb-2">
@@ -585,6 +572,18 @@ export default function DashboardPage() {
             <p><strong>Description:</strong> {activeGoal.description}</p>
             <p><strong>Timeline:</strong> {activeGoal.timeline}</p>
             <p><strong>Motivator:</strong> {activeGoal.motivator}</p>
+          </div>
+          {/* Bottom-right Edit button (mobile full-width, desktop right-aligned) */}
+          <div className="mt-4 flex justify-end">
+            <button
+              className="text-base bg-[#4296F7] hover:bg-[#2f7de0] text-white px-2 py-1 rounded transition-colors duration-200 w-full sm:w-auto"
+              onClick={() => {
+                setEditedGoal(activeGoal)
+                setIsModalOpen(true)
+              }}
+            >
+              Edit Goal
+            </button>
           </div>
         </div>
       )}
@@ -744,114 +743,130 @@ export default function DashboardPage() {
         <p className="p-4">You have no habits yet.</p>
       ) : (
         <ul className="space-y-4 mt-4">
-          {habits.map(habit => (
-            <li
-              key={habit.id}
-              className="bg-white p-4 rounded-lg shadow border border-gray-100 hover:shadow-md hover:ring hover:ring-blue-100 transition duration-200"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                {/* Tappable completion pill */}
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => toggleCompletion(habit.id)}
-                  onContextMenu={e => {
-                    e.preventDefault()
-                    startEdit(habit.id)
-                  }}
-                  className={`text-sm px-4 py-2 rounded-full font-medium transition w-fit ${
-                    isHabitCompletedOn(habit.id, today)
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {isHabitCompletedOn(habit.id, today) ? '🎉 Done' : '✅ Mark'}
-                </motion.button>
+          {habits.map((habit) => {
+            const isCompleted = isHabitCompletedOn(habit.id, today)
 
-                {/* Habit Editing */}
-                {habit.isEditing ? (
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-grow w-full">
-                    <input
-                      type="text"
-                      value={habit.editTitle}
-                      onChange={e => {
-                        const newTitle = e.target.value
-                        setHabits(habits.map(h =>
-                          h.id === habit.id ? { ...h, editTitle: newTitle } : h
-                        ))
-                      }}
-                      className="flex-grow px-3 py-2 border border-gray-300 rounded"
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => saveHabit(habit.id)}
-                        className="px-3 py-2 bg-[#367BDB] text-white rounded hover:bg-blue-600 transition"
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={() => cancelEdit(habit.id)}
-                        className="px-3 py-2 bg-gray-200 text-red-600 rounded hover:bg-gray-300 transition"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex-grow w-full">
-                    <div className="font-semibold">{habit.title}</div>
-
-                    {getCurrentStreak(habit.id) > 0 && (
-                      <div className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                        <span>🔥</span>
-                        <span>
-                          Streak: {getCurrentStreak(habit.id)} day
-                          {getCurrentStreak(habit.id) !== 1 && 's'}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Weekly indicator */}
-                    <div className="mt-2">
-                      <div className="flex gap-1 text-xs text-gray-500">
-                        {weekDayLabels.map((label, idx) => (
-                          <span key={idx} className="w-5 text-center">{label}</span>
-                        ))}
-                      </div>
-                      <div className="flex gap-1 mt-1">
-                        {weekDays.map(date => (
-                          <div
-                            key={date}
-                            className="w-4 h-4 rounded-full"
-                            style={{
-                              backgroundColor: isHabitCompletedOn(habit.id, date) ? 'green' : '#F0F0F0',
-                              border: date === today ? '2px solid #367BDB' : 'none',
-                            }}
-                          />
-                        ))}
+            return (
+              <li
+                key={habit.id}
+                className={`p-4 rounded-lg shadow border border-gray-100 transition-all duration-200 transform ${
+                  isCompleted ? 'bg-green-100' : 'bg-white'
+                } active:scale-95`}
+                onClick={() => {
+                  if (!habit.isEditing) toggleCompletion(habit.id)
+                }}
+                onTouchStart={(e) => {
+                  if (!habit.isEditing) {
+                    const target = e.currentTarget as HTMLElement;
+                    const timeoutId: ReturnType<typeof setTimeout> = setTimeout(() => {
+                      startEdit(habit.id);
+                    }, 600);
+                    (target as any)._timeoutId = timeoutId;
+                  }
+                }}
+                onTouchEnd={(e) => {
+                  const target = e.currentTarget as HTMLElement;
+                  const timeoutId = (target as any)._timeoutId as ReturnType<typeof setTimeout> | undefined;
+                  if (timeoutId) clearTimeout(timeoutId);
+                }}
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  {habit.isEditing ? (
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-grow w-full">
+                      <input
+                        type="text"
+                        value={habit.editTitle}
+                        onChange={(e) => {
+                          const newTitle = e.target.value
+                          setHabits(
+                            habits.map((h) =>
+                              h.id === habit.id ? { ...h, editTitle: newTitle } : h
+                            )
+                          )
+                        }}
+                        className="flex-grow px-3 py-2 border border-gray-300 rounded"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => saveHabit(habit.id)}
+                          className="px-3 py-2 bg-[#367BDB] text-white rounded hover:bg-blue-600 transition"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => cancelEdit(habit.id)}
+                          className="px-3 py-2 bg-gray-200 text-red-600 rounded hover:bg-gray-300 transition"
+                        >
+                          Cancel
+                        </button>
                       </div>
                     </div>
+                  ) : (
+                    <div className="flex-grow w-full">
+                      <div className="font-semibold text-base">{habit.title}</div>
+                      {getCurrentStreak(habit.id) > 0 && (
+                        <div className="text-sm text-gray-600 flex items-center gap-1 mt-1">
+                          <span>🔥</span>
+                          <span>
+                            Streak: {getCurrentStreak(habit.id)} day
+                            {getCurrentStreak(habit.id) !== 1 && 's'}
+                          </span>
+                        </div>
+                      )}
 
-                    {/* Edit/Delete buttons */}
-                    <div className="flex gap-2 mt-3">
-                      <button
-                        onClick={() => startEdit(habit.id)}
-                        className="px-3 py-1 text-sm bg-gray-100 text-black rounded hover:bg-gray-200 transition"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => deleteHabit(habit.id)}
-                        className="px-3 py-1 text-sm bg-gray-100 text-red-600 rounded hover:bg-red-100 transition"
-                      >
-                        Delete
-                      </button>
+                      {/* Weekly Tracker */}
+                      <div className="mt-2">
+                        <div className="flex gap-1 text-xs text-gray-500">
+                          {weekDayLabels.map((label, idx) => (
+                            <span key={idx} className="w-5 text-center leading-none">
+                              {label}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="flex gap-1 mt-1">
+                          {weekDays.map((date) => (
+                            <div
+                              key={date}
+                              className="w-4 h-4 rounded-full"
+                              style={{
+                                backgroundColor: isHabitCompletedOn(habit.id, date)
+                                  ? 'green'
+                                  : '#F0F0F0',
+                                border:
+                                  date === today ? '2px solid #367BDB' : '1px solid #ccc',
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          onClick={() => startEdit(habit.id)}
+                          className="px-3 py-1 text-sm bg-gray-100 text-black rounded hover:bg-gray-200 transition"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (window.confirm('Delete this habit?')) {
+                              deleteHabit(habit.id)
+                            }
+                          }}
+                          className="px-3 py-1 text-sm bg-gray-100 text-red-600 rounded hover:bg-red-100 transition"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            </li>
-          ))}
+                  )}
+                </div>
+              </li>
+            )
+          })}
         </ul>
+
+
       )}
     </div>
   )
