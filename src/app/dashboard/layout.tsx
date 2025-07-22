@@ -36,6 +36,13 @@ export default function DashboardLayout({
         </button> */}
       </header>
       <main>{children}</main>
+      {/* Logout Button (move this somewhere else later) */}
+        <button
+          onClick={handleLogout}
+          className="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded"
+        >
+          Logout
+        </button>
     </div>
   )
 }
