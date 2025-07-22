@@ -12,8 +12,7 @@ import { getNextWeekDifficultyChange, getEncouragementMessage } from '@/utils/ne
 import { saveDifficultyOverride } from '@/utils/saveDifficultyOverride'
 import {toast} from 'sonner'
 import GoalProgressCircle from '@/components/GoalProgressCircle'
-import { HomeIcon, BellIcon, UserIcon, PlusCircleIcon, ClipboardIcon } from '@heroicons/react/24/outline'
-import { usePathname } from 'next/navigation'
+import MobileNavBar from '@/components/MobileNavBar'
 
 type Habit = Database['public']['Tables']['habits']['Row'] & {
   isEditing?: boolean
@@ -54,8 +53,6 @@ export default function DashboardPage() {
   const weekDayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
-
-  const pathname = usePathname()
 
   const hasRunRef = useRef<string | null>(null)
 
@@ -920,69 +917,7 @@ export default function DashboardPage() {
       {/* Navigation Bar */}
       {/* This line directly below restricts the nav bar to mobile only. Uncomment and comment out the next line when done testing */}
       {/* <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-md sm:hidden"> */}
-      <nav 
-        className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-md"
-        role="navigation"
-        aria-label="Main mobile navigation"
-        >  
-        <div className="flex justify-between items-center px-4 py-2 text-gray-500">
-          {/* Dashboard/Home Page */}
-          <a href="/dashboard" 
-             aria-current={pathname === '/dashboard' ? 'page' : undefined}
-             aria-label="Home"
-             className={`flex flex-col items-center text-xs transition transform duration-150
-              ${pathname === '/dashboard' ? 'text-blue-600' : 'text-gray-500'} 
-              hover:text-blue-600 active:scale-95`}>
-            <HomeIcon className="h-6 w-6" />
-            Home
-          </a>
-          {/* Logs Page */}
-          <a href="/logs" 
-             aria-current={pathname === '/logs' ? 'page' : undefined}
-             aria-label="Logs"
-             className={`flex flex-col items-center text-xs transition transform duration-150
-              ${pathname === '/logs' ? 'text-blue-600' : 'text-gray-500'}
-              hover:text-blue-600 active:scale-95`}>
-            <ClipboardIcon className="h-6 w-6" />
-            Logs
-          </a>
-          {/* Add Content Button & Page */}
-          <a
-            href="/add"
-            aria-label="Add Log"
-            className="bg-blue-500 text-white rounded-full p-4 shadow-lg hover:bg-blue-600 active:scale-90 transition transform duration-150"
-            style={{
-              position: 'absolute',
-              bottom: 'calc(env(safe-area-inset-bottom, 1.5rem))',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 10,
-            }}
-          >
-            <PlusCircleIcon className="h-8 w-8" />
-          </a>
-          {/* Notifications Page */}
-          <a href="/notifications" 
-             aria-current={pathname === '/notifications' ? 'page' : undefined}
-             aria-label="Notifications"
-             className={`flex flex-col items-center text-xs transition transform duration-150
-              ${pathname === '/notifications' ? 'text-blue-600' : 'text-gray-500'}
-              hover:text-blue-600 active:scale-85`}>
-            <BellIcon className="h-6 w-6" />
-            Alerts
-          </a>
-          {/* Profile Page */}
-          <a href="/profile" 
-             aria-current={pathname === '/profile' ? 'page' : undefined}
-             aria-label="Profile"
-             className={`flex flex-col items-center text-xs transition transform duration-150
-              ${pathname === '/profile' ? 'text-blue-600' : 'text-gray-500'}
-              hover:text-blue-600`}>
-            <UserIcon className="h-6 w-6" />
-            Profile
-          </a>
-        </div>
-      </nav>
+      <MobileNavBar/>
     </div>
   )
 }
