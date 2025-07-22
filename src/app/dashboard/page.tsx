@@ -12,6 +12,7 @@ import { getNextWeekDifficultyChange, getEncouragementMessage } from '@/utils/ne
 import { saveDifficultyOverride } from '@/utils/saveDifficultyOverride'
 import {toast} from 'sonner'
 import GoalProgressCircle from '@/components/GoalProgressCircle'
+import { motion } from 'framer-motion'
 
 type Habit = Database['public']['Tables']['habits']['Row'] & {
   isEditing?: boolean
@@ -563,6 +564,19 @@ export default function DashboardPage() {
             />
           </div>
 
+          {/* Bottom-right Edit button (mobile full-width, desktop right-aligned) */}
+          <div className="mt-4 flex justify-end">
+            <button
+              className="absolute bottom-4 right-4 text-base bg-[#4296F7] hover:bg-[#2f7de0] text-white px-2 py-1 rounded transition-colors duration-200 w-full sm:w-auto"
+              onClick={() => {
+                setEditedGoal(activeGoal)
+                setIsModalOpen(true)
+              }}
+            >
+              Edit Goal
+            </button>
+          </div>
+
           {/* Text content with padding to avoid overlapping the circle */}
           <div className="pr-24">
             <h2 className="text-lg font-bold mb-2">
@@ -571,19 +585,6 @@ export default function DashboardPage() {
             <p><strong>Description:</strong> {activeGoal.description}</p>
             <p><strong>Timeline:</strong> {activeGoal.timeline}</p>
             <p><strong>Motivator:</strong> {activeGoal.motivator}</p>
-          </div>
-
-          {/* Bottom-right Edit button (mobile full-width, desktop right-aligned) */}
-          <div className="mt-4 flex justify-end">
-            <button
-              className="absolute bottom-4 right-4 text-base bg-[#4296F7] hover:bg-[#2f7de0] text-white px-2 py-1 rounded transition-colors duration-200 w-full sm:w-24"
-              onClick={() => {
-                setEditedGoal(activeGoal)
-                setIsModalOpen(true)
-              }}
-            >
-              Edit Goal
-            </button>
           </div>
         </div>
       )}
@@ -748,13 +749,25 @@ export default function DashboardPage() {
               key={habit.id}
               className="bg-white p-4 rounded-lg shadow border border-gray-100 hover:shadow-md hover:ring hover:ring-blue-100 transition duration-200"
             >
-              <div className="flex items-start sm:items-center flex-col sm:flex-row gap-2">
-                <input
-                  type="checkbox"
-                  checked={isHabitCompletedOn(habit.id, today)}
-                  onChange={() => toggleCompletion(habit.id)}
-                />
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                {/* Tappable completion pill */}
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => toggleCompletion(habit.id)}
+                  onContextMenu={e => {
+                    e.preventDefault()
+                    startEdit(habit.id)
+                  }}
+                  className={`text-sm px-4 py-2 rounded-full font-medium transition w-fit ${
+                    isHabitCompletedOn(habit.id, today)
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {isHabitCompletedOn(habit.id, today) ? '🎉 Done' : '✅ Mark'}
+                </motion.button>
 
+                {/* Habit Editing */}
                 {habit.isEditing ? (
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-grow w-full">
                     <input
@@ -786,15 +799,18 @@ export default function DashboardPage() {
                 ) : (
                   <div className="flex-grow w-full">
                     <div className="font-semibold">{habit.title}</div>
+
                     {getCurrentStreak(habit.id) > 0 && (
                       <div className="text-sm text-gray-600 flex items-center gap-1 mt-1">
                         <span>🔥</span>
                         <span>
-                          Streak: {getCurrentStreak(habit.id)} day{getCurrentStreak(habit.id) !== 1 && 's'}
+                          Streak: {getCurrentStreak(habit.id)} day
+                          {getCurrentStreak(habit.id) !== 1 && 's'}
                         </span>
                       </div>
                     )}
 
+                    {/* Weekly indicator */}
                     <div className="mt-2">
                       <div className="flex gap-1 text-xs text-gray-500">
                         {weekDayLabels.map((label, idx) => (
@@ -815,6 +831,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
+                    {/* Edit/Delete buttons */}
                     <div className="flex gap-2 mt-3">
                       <button
                         onClick={() => startEdit(habit.id)}
