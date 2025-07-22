@@ -764,8 +764,8 @@ export default function DashboardPage() {
             return (
               <li
                 key={habit.id}
-                className={`p-4 rounded-lg shadow border border-gray-100 transition-all duration-200 transform ${
-                  isCompleted ? 'bg-green-100' : 'bg-white'
+                className={`hover:bg-[#DDEFFF] p-4 rounded-lg shadow border border-gray-100 transition-all duration-200 transform ${
+                  isCompleted ? 'bg-green-100 hover:bg-green-100' : 'bg-white'
                 } active:scale-95 relative`}
                 onClick={(e) => {
                   if (!habit.isEditing && !(e.target as HTMLElement).closest('.habit-menu')) {
@@ -836,15 +836,18 @@ export default function DashboardPage() {
                       )}
 
                       {/* Weekly Tracker */}
-                      <div className="mt-2">
-                        <div className="flex gap-1 text-xs text-gray-500">
+                      <div className="mt-3 w-fit">
+                        <div className="flex justify-center gap-1 text-[10px] text-gray-500">
                           {weekDayLabels.map((label, idx) => (
-                            <span key={idx} className="w-5 text-center leading-none">
+                            <span
+                              key={idx}
+                              className="w-4 text-center leading-tight"
+                            >
                               {label}
                             </span>
                           ))}
                         </div>
-                        <div className="flex gap-1 mt-1">
+                        <div className="flex justify-center gap-1 mt-1">
                           {weekDays.map((date) => (
                             <div
                               key={date}
@@ -854,9 +857,7 @@ export default function DashboardPage() {
                                   ? 'green'
                                   : '#F0F0F0',
                                 border:
-                                  date === today
-                                    ? '2px solid #367BDB'
-                                    : '1px solid #ccc',
+                                  date === today ? '2px solid #367BDB' : '1px solid #ccc',
                               }}
                             />
                           ))}
