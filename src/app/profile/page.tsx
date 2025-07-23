@@ -1,15 +1,17 @@
 'use client'
 
+import { Database } from '@/types/supabase'
 import { useEffect, useState } from 'react'
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react'
 import MobileNavBar from '@/components/MobileNavBar'
 
 export default function ProfilePage() {
-  const supabase = useSupabaseClient()
+  const supabase = useSupabaseClient<Database>()
   const user = useUser()
 
-  const [goal, setGoal] = useState<any>(null)
-  const [weeklyStats, setWeeklyStats] = useState<any>(null)
+  const [goal, setGoal] = useState<Database['public']['Tables']['goals']['Row'] | null>(null)
+  const [weeklyStats, setWeeklyStats] = useState<Database['public']['Tables']['weekly_stats']['Row'] | null>(null)
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -75,12 +77,15 @@ export default function ProfilePage() {
       {/* Weekly Stats */}
       {weeklyStats ? (
         <div className="bg-white rounded shadow p-4 mb-4">
-          <h2 className="font-semibold text-lg mb-2">Latest Weekly Stats</h2>
-          <p><strong>Score:</strong> {weeklyStats.score}</p>
-          <p><strong>Completed Habits:</strong> {weeklyStats.completed}</p>
-          <p><strong>Total Habits:</strong> {weeklyStats.total}</p>
-        </div>
-      ) : (
+            <h2 className="font-semibold text-lg mb-2">Latest Weekly Stats</h2>
+            <p><strong>Completion Percentage:</strong> {weeklyStats.completion_pct}%</p>
+            {weeklyStats.streak_count !== null && (
+            <p><strong>Streak Count:</strong> {weeklyStats.streak_count}</p>
+            )}
+            <p><strong>Difficulty:</strong> {weeklyStats.difficulty}</p>
+            <p><strong>Summary:</strong> {weeklyStats.summary}</p>
+            </div>
+        ) : (
         <div className="bg-white rounded shadow p-4 mb-4">
           <h2 className="font-semibold text-lg mb-2">Weekly Stats</h2>
           <p>No stats yet.</p>
