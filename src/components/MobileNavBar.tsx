@@ -14,7 +14,9 @@ export default function MobileNavBar() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-md sm:hidden"
+      //The below hides the nav bar on desktop. Uncomment and comment the next line when pushing to mobile
+      //className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-md sm:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-md"
       role="navigation"
       aria-label="Main mobile navigation"
       style={{
