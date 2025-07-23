@@ -127,30 +127,28 @@ export default function DashboardPage() {
         return
       }
 
-      const thisWeekKey = format(new Date(), 'yyyy-ww')
+      const now = new Date()
+      const thisWeekKey = format(now, 'yyyy-ww')
 
-      // Prevent running more than one time (it was running 3 times before)
-      if (hasRunRef.current === thisWeekKey) return
-      hasRunRef.current = thisWeekKey
-      //Prevent running more than once per week
+      {/* Comment out block below to test weekly report */}
       const shownKey = `weeklyReportShown-${thisWeekKey}`
+      if (hasRunRef.current === thisWeekKey) return
       if (localStorage.getItem(shownKey)) return
 
-      const now = new Date()
+      {/* Comment out below to test weekly report modal */}
       const isSunday8pmLocal =
-        now.getDay() === 0 &&
-        now.getHours() === 20 &&
-        now.getMinutes() < 60
+        now.getDay() === 0 && now.getHours() === 20 && now.getMinutes() < 60
 
-      // Uncomment this to restore the original condition:
       if (!isSunday8pmLocal) {
         console.log('Not Sunday 8pm local, skipping report generation')
         return
       }
 
+      hasRunRef.current = thisWeekKey
+      {/* Comment out line below to test weekly report */}
+      localStorage.setItem(shownKey, 'true')
+
       try {
-
-
         const score = await calculateWeeklyScore(supabase, session.user.id)
         console.log('Weekly score:', score)
 
@@ -158,17 +156,16 @@ export default function DashboardPage() {
           .from('weekly_difficulty_overrides')
           .select('override')
           .eq('user_id', session.user.id)
-          .eq('week', format(now, 'yyyy-ww'))
+          .eq('week', thisWeekKey)
           .single()
 
         if (overrideError) {
           console.warn('Override fetch error:', overrideError.message)
-        } else {
-          console.log('Fetched override data:', overrideData)
         }
 
         const difficulty = overrideData?.override ?? getNextWeekDifficultyChange(score)
         const nextWeekMessage = getEncouragementMessage(difficulty)
+
         console.log('Determined difficulty:', difficulty)
         console.log('Generated encouragement message:', nextWeekMessage)
 
@@ -195,7 +192,22 @@ export default function DashboardPage() {
           setWeeklyReport(data.summary)
           setNextWeekMessage(nextWeekMessage)
           setShowWeeklyModal(true)
-          localStorage.setItem(thisWeekKey, 'true')
+
+          const { error: statsError } = await supabase.from('weekly_stats').insert([
+            {
+              user_id: session.user.id,
+              week_start: startOfWeek(now, { weekStartsOn: 0 }).toISOString(),
+              completion_pct: score,
+              difficulty: difficulty,
+              summary: data.summary,
+              created_at: new Date().toISOString(),
+            },
+          ])
+
+          if (statsError) {
+            console.warn('Failed to save weekly stats:', statsError.message)
+          }
+
           console.log('Weekly modal set to show ✅')
         } else {
           console.error('Failed to generate summary:', data.error)
@@ -208,42 +220,45 @@ export default function DashboardPage() {
     maybeGenerateWeeklyReport()
   }, [session, habits, activeGoal, supabase])
 
+
   useEffect(() => {
     async function maybeGenerateNewWeeklyHabits() {
-      if (!session?.user || !activeGoal) return;
+      if (!session?.user || !activeGoal) return
 
-      const now = new Date();
-      const currentWeek = format(now, 'yyyy-ww');
-      const habitsGeneratedKey = `habitsGenerated-${currentWeek}`;
+      const now = new Date()
+      const thisWeekKey = format(now, 'yyyy-ww')
+      const habitsGeneratedKey = `habitsGenerated-${thisWeekKey}`
 
-      // Prevent duplicate generation
-      if (localStorage.getItem(habitsGeneratedKey)) return;
+      if (localStorage.getItem(habitsGeneratedKey)) return
 
       try {
-        // Fetch difficulty override
-        const { data: overrideData } = await supabase
+        // Use the same override logic here
+        const { data: overrideData, error: overrideError } = await supabase
           .from('weekly_difficulty_overrides')
           .select('override')
           .eq('user_id', session.user.id)
-          .eq('week', currentWeek)
-          .single();
+          .eq('week', thisWeekKey)
+          .single()
 
-        const score = await calculateWeeklyScore(supabase, session.user.id);
-        const difficulty = overrideData?.override ?? getNextWeekDifficultyChange(score);
+        if (overrideError) {
+          console.warn('Difficulty override fetch error:', overrideError.message)
+        }
+
+        const difficulty = overrideData?.override ?? 'same' // Default to 'same' if nothing found
 
         // Delete old habits
         const { error: deleteError } = await supabase
           .from('habits')
           .delete()
           .eq('user_id', session.user.id)
-          .eq('goal_id', activeGoal.id);
+          .eq('goal_id', activeGoal.id)
 
         if (deleteError) {
-          console.error('Error deleting old habits:', deleteError);
-          return;
+          console.error('Error deleting old habits:', deleteError)
+          return
         }
 
-        // Generate new habits from API
+        // Generate new habits
         const response = await fetch('/api/generate-habits', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -253,41 +268,42 @@ export default function DashboardPage() {
             timeline: activeGoal.timeline,
             motivator: activeGoal.motivator,
             messageToFutureSelf: activeGoal.future_message,
-            difficulty: difficulty, // optional, in case your API handles this
+            difficulty: difficulty,
           }),
-        });
+        })
 
         if (!response.ok) {
-          console.error('Failed to fetch new habits from AI');
-          return;
+          console.error('Failed to fetch new habits from AI')
+          return
         }
 
-        const { habits: newHabits } = await response.json();
+        const { habits: newHabits } = await response.json()
 
-        // Insert new habits
         const inserts = newHabits.map((habit: { title: string }) => ({
           user_id: session.user.id,
           goal_id: activeGoal.id,
           title: habit.title,
           created_at: new Date().toISOString(),
-        }));
+        }))
 
-        const { error: insertError } = await supabase.from('habits').insert(inserts);
-        
+        const { error: insertError } = await supabase.from('habits').insert(inserts)
+
         if (insertError) {
-          console.error('Error inserting new habits:', insertError);
-          return;
+          console.error('Error inserting new habits:', insertError)
+          return
         }
+
         toast.success('New habits for the week have been generated!')
-        localStorage.setItem(habitsGeneratedKey, 'true');
-        await fetchHabits(); // Refresh the habit list
+        localStorage.setItem(habitsGeneratedKey, 'true')
+        await fetchHabits()
       } catch (err) {
-        console.error('Error in weekly habit generation:', err);
+        console.error('Error in weekly habit generation:', err)
       }
     }
 
-    maybeGenerateNewWeeklyHabits();
-  }, [session, activeGoal, supabase, fetchHabits]);
+    maybeGenerateNewWeeklyHabits()
+  }, [session, activeGoal, supabase, fetchHabits])
+
 
   async function addHabit() {
     if (!newHabitTitle.trim() || !session?.user) return
@@ -603,15 +619,15 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Temporary button for weekly report modal */}
+      {/* Temporary button for weekly report modal (comment out) */}
       {/* <button
         onClick={() => {
-          console.log('Test button clicked')
-          setShowWeeklyModal(true)
+          const event = new Event('forceWeeklyReport');
+          window.dispatchEvent(event);
         }}
-        className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded shadow-lg z-50"
+        className="fixed bottom-20 right-4 bg-blue-500 text-white px-4 py-2 rounded shadow-lg"
       >
-        Show Weekly Modal (Test)
+        🔁 Force Weekly Report
       </button> */}
 
       {/* Weekly Report Modal */}
@@ -915,8 +931,6 @@ export default function DashboardPage() {
         </ul>
       )}
       {/* Navigation Bar */}
-      {/* This line directly below restricts the nav bar to mobile only. Uncomment and comment out the next line when done testing */}
-      {/* <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-md sm:hidden"> */}
       <MobileNavBar/>
     </div>
   )

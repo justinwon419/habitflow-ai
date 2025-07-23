@@ -119,7 +119,37 @@ export type Database = {
         }
         Relationships: []
       }
-
+      weekly_stats: {
+        Row: {
+          id: string
+          user_id: string
+          week_start: string // ISO string
+          completion_pct: number
+          streak_count: number | null // optional if you're not using it yet
+          difficulty: string // e.g. "easier" | "same" | "harder"
+          summary: string
+          created_at: string
+        }
+        Insert: {
+          user_id: string
+          week_start: string
+          completion_pct: number
+          streak_count?: number | null
+          difficulty: string
+          summary: string
+          created_at?: string
+        }
+        Update: Partial<{
+          user_id: string
+          week_start: string
+          completion_pct: number
+          streak_count: number | null
+          difficulty: string
+          summary: string
+          created_at: string
+        }>
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

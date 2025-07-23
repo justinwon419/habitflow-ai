@@ -29,8 +29,24 @@ export default function WeeklyReportModal({
   const [currentSlide, setCurrentSlide] = useState(0)
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyChoice>(null)
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     onDifficultySelect(selectedDifficulty)
+
+    // 🆕 Save override to Supabase
+    if (selectedDifficulty) {
+      const res = await fetch('/api/save-difficulty-override', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          override: selectedDifficulty,
+        }),
+      })
+
+      if (!res.ok) {
+        console.error('Failed to save difficulty override')
+      }
+    }
+
     onClose()
   }
 
