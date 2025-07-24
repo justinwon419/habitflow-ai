@@ -1,8 +1,6 @@
 'use client'
 
 import React from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { useRouter } from 'next/navigation'
 import '@/styles/globals.css'
 
 export default function DashboardLayout({
@@ -10,8 +8,6 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = createClientComponentClient()
-  const router = useRouter()
 
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: 'auto', backgroundColor: 'white' }}>
