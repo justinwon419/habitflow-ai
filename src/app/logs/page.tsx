@@ -1,13 +1,11 @@
 // app/logs/page.tsx
-export const dynamic = 'force-dynamic'
-
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { format } from 'date-fns'
 import AddLogForm from '@/components/AddLogForm'
+import LogList from '@/components/LogList'
 import MobileNavBar from '@/components/MobileNavBar'
 import { quotes, authors } from '@/lib/quotes'
-import LogList from '@/components/LogList'
 
 export default async function LogsPage() {
   const supabase = createServerComponentClient({ cookies })
@@ -17,15 +15,15 @@ export default async function LogsPage() {
   } = await supabase.auth.getSession()
 
   if (!session?.user) {
-    return <p>Please log in to view your logs.</p>
+    return <p className="p-4 text-center">Please log in to view your logs.</p>
   }
 
-  // ✅ Use plain JS — no useMemo in server components
-  const randomIndex = Math.floor(Math.random() * quotes.length)
-  const quote = quotes[randomIndex]
-  const author = authors[randomIndex]
+  // pick a random quote
+  const idx = Math.floor(Math.random() * quotes.length)
+  const quote = quotes[idx]
+  const author = authors[idx]
 
-  // Fetch logs for the user
+  // fetch logs
   const { data: logs, error } = await supabase
     .from('logs')
     .select('*')
@@ -33,40 +31,36 @@ export default async function LogsPage() {
     .order('created_at', { ascending: false })
 
   if (error) {
-    return <p>Error loading logs: {error.message}</p>
+    return <p className="p-4 text-center text-red-600">Error loading logs: {error.message}</p>
   }
 
-  // Group logs by date
-  const groupedLogs: Record<string, typeof logs> = {}
-
+  // group by date
+  const grouped: Record<string, typeof logs> = {}
   logs.forEach((log) => {
-    const date = format(new Date(log.created_at), 'yyyy-MM-dd')
-    if (!groupedLogs[date]) groupedLogs[date] = []
-    groupedLogs[date].push(log)
+    const d = format(new Date(log.created_at), 'yyyy-MM-dd')
+    if (!grouped[d]) grouped[d] = []
+    grouped[d].push(log)
   })
 
   return (
-    <div className="p-4 max-w-screen-md mx-auto">
+    <div className="min-h-screen bg-gray-100 p-4 w-full max-w-screen-md mx-auto">
       {/* Quote Card */}
       {quote && (
-        <div className="bg-[#E9E9E9] border-l-4 border-[#C9C9C9] p-4 rounded shadow mb-4">
-            <p className="text-xl font-bold text-black mb-2">Motivation for the Day:</p>
-            <div className="flex flex-col">
-            <p className="text-sm italic text-black leading-snug">{`"${quote}"`}</p>
-            <span className="text-sm text-gray-600 italic font-medium self-end mt-1">
-                — {author}
-            </span>
-            </div>
+        <div className="bg-white p-4 rounded-lg shadow mb-6 border-l-4 border-[#C9C9C9]">
+          <p className="text-xl font-bold text-gray-900 mb-2">Motivation for the Day:</p>
+          <blockquote className="italic text-gray-800 leading-snug">“{quote}”</blockquote>
+          <p className="text-right mt-2 text-gray-600">— {author}</p>
         </div>
-        )}
+      )}
 
+      {/* Add Log Form */}
       <AddLogForm />
 
-      <h1 className="text-2xl font-bold mb-4">Your Logs</h1>
+      {/* Logs List */}
+      <h1 className="text-2xl font-bold text-gray-900 mb-4">Your Logs</h1>
+      <LogList groupedLogs={grouped} />
 
-      <LogList groupedLogs={groupedLogs} />
-
-      {/* Mobile Nav Bar */}
+      {/* Mobile Nav */}
       <MobileNavBar />
     </div>
   )
