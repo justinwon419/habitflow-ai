@@ -150,6 +150,40 @@ export type Database = {
         }>
         Relationships: []
       }
+      user_goal_streak: {
+        Row: {
+          /** Primary key */
+          id: string
+          /** References auth.users(id) */
+          user_id: string
+          /** Number of consecutive days ≥80% completion */
+          current_streak: number
+          /** Date this streak was last checked (YYYY-MM-DD) */
+          last_checked: string
+          /** When this record was first created */
+          created_at: string | null
+          /** When this record was last updated */
+          updated_at: string | null
+        }
+        Insert: {
+          /** You can let the DB default this */
+          id?: string
+          user_id: string
+          current_streak?: number
+          last_checked?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          current_streak?: number
+          last_checked?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,19 +1,16 @@
+import React, { ReactNode } from 'react'
 import './globals.css'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import SupabaseProvider from '@/components/SupabaseProvider'
+import AuthGuard from '@/components/AuthGuard'
 import { Toaster } from 'sonner'
 
-export const metadata = {
-  title: 'HabitFlow',
-  description: 'Track and build your habits with AI',
+interface RootLayoutProps {
+  children: ReactNode
 }
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function RootLayout({ children }: RootLayoutProps) {
   const supabase = createServerComponentClient({ cookies })
   const {
     data: { session },
@@ -23,7 +20,9 @@ export default async function RootLayout({
     <html lang="en">
       <body>
         <SupabaseProvider initialSession={session}>
-          {children}
+          <AuthGuard>
+            {children}
+          </AuthGuard>
           <Toaster richColors position="top-center" />
         </SupabaseProvider>
       </body>

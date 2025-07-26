@@ -5,7 +5,6 @@ import { useSupabaseClient, useSession } from '@supabase/auth-helpers-react'
 import { format, parseISO, startOfWeek, addDays} from 'date-fns'
 import { Database } from '@/types/supabase'
 import { useRouter } from 'next/navigation'
-import { GoalInput } from '@/utils/generateHabits'
 import WeeklyReportModal from '@/components/WeeklyReportModal'
 import { getWeeklyStats, calculateWeeklyScore } from '@/utils/stats'
 import { getNextWeekDifficultyChange, getEncouragementMessage } from '@/utils/nextDifficulty'
@@ -13,6 +12,7 @@ import { saveDifficultyOverride } from '@/utils/saveDifficultyOverride'
 import {toast} from 'sonner'
 import GoalProgressCircle from '@/components/GoalProgressCircle'
 import MobileNavBar from '@/components/MobileNavBar'
+import { handleGoalStreak } from '@/utils/handleGoalStreak'
 
 type Habit = Database['public']['Tables']['habits']['Row'] & {
   isEditing?: boolean
@@ -55,6 +55,9 @@ export default function DashboardPage() {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
 
   const hasRunRef = useRef<string | null>(null)
+
+  //Goal Streak const
+  const [goalStreak, setGoalStreak] = useState<number>(0)
 
   const fetchHabits = useCallback(async () => {
     if (!session?.user) return
@@ -520,6 +523,12 @@ export default function DashboardPage() {
         setCompletions([...completions, data])
       }
     }
+    try {
+      const newStreak = await handleGoalStreak(supabase, session.user.id)
+      setGoalStreak(newStreak)
+    } catch (err) {
+      console.error('live streak error', err)
+    }
   }
 
   function getCurrentStreak(habitId: string) {
@@ -549,21 +558,6 @@ export default function DashboardPage() {
 
     return streak
   }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async function fetchHabitsFromAI(goalData: GoalInput) {
-  const response = await fetch('/api/generate-habits', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(goalData),
-  })
-
-  if (!response.ok) {
-    throw new Error('Failed to generate habits')
-  }
-
-  const data = await response.json()
-  return data.habits
-  }
 
   const totalCheckmarks = habits.length
   const completedCheckmarks = habits.filter(habit =>
@@ -573,7 +567,6 @@ export default function DashboardPage() {
   const completionPercentage = totalCheckmarks === 0
     ? 0
     : (completedCheckmarks / totalCheckmarks) * 100
-  
 
   if (!session) {
     return <p>Please log in to view your dashboard.</p>
@@ -581,6 +574,8 @@ export default function DashboardPage() {
   console.log('showWeeklyModal:', showWeeklyModal)
   console.log('weeklyReport:', weeklyReport)
   console.log('nextWeekMessage:', nextWeekMessage)
+
+  {/* JSX RETURN BLOCK */}
   return (
     <div className="min-h-screen bg-gray-100 p-4 w-full max-w-screen-md mx-auto">
       {/* Goal Card */}
@@ -618,6 +613,16 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      <div className="bg-white p-4 rounded-lg shadow mb-4">
+          <h3 className="text-lg font-semibold">Goal Streak</h3>
+          <p className="mt-2 text-3xl font-bold">
+            {goalStreak} day{goalStreak !== 1 && 's'}
+          </p>
+          <p className="text-sm text-gray-500">
+            Complete at least 80% of your habits each day to keep your streak going.
+          </p>
+        </div>
 
       {/* Temporary button for weekly report modal (comment out) */}
       {/* <button
