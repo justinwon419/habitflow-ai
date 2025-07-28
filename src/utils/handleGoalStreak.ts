@@ -21,7 +21,6 @@ export async function handleGoalStreak(
     .from('habits')
     .select('id, created_at')
     .eq('user_id', userId)
-    .lte('created_at', today)
   if (habitsError) throw habitsError
   const totalHabits = habits?.length ?? 0
   console.log('[handleGoalStreak] totalHabits=', totalHabits)

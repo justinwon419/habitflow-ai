@@ -123,6 +123,23 @@ export default function DashboardPage() {
     checkGoalsAndFetchHabits()
   }, [session, fetchHabits, router, supabase])
 
+  // load the saved streak on first render
+  useEffect(() => {
+    async function loadStreak() {
+      if (!session?.user) return
+      const { data: rec } = await supabase
+        .from('user_goal_streak')
+        .select('current_streak')
+        .eq('user_id', session.user.id)
+        .order('last_checked', { ascending: false })
+        .limit(1)
+        .single()
+      setGoalStreak(rec?.current_streak ?? 0)
+    }
+    loadStreak()
+  }, [session, supabase])
+
+
   useEffect(() => {
     async function maybeGenerateWeeklyReport() {
       if (!session?.user || !activeGoal || hasRunRef.current) {
