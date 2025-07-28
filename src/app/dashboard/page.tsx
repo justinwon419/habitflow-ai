@@ -666,6 +666,66 @@ export default function DashboardPage() {
         />
       )}
 
+      {/* Edit Goal Modal */}
+      {isModalOpen && editedGoal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full border-t-8 border-[#4296F7]">
+            <h2 className="text-2xl font-bold mb-4 text-[#4296F7]">Edit Goal</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block font-semibold mb-1">Title</label>
+                <input
+                  type="text"
+                  value={editedGoal.goal_title}
+                  onChange={e => setEditedGoal({ ...editedGoal, goal_title: e.target.value })}
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold mb-1">Description</label>
+                <input
+                  type="text"
+                  value={editedGoal.description}
+                  onChange={e => setEditedGoal({ ...editedGoal, description: e.target.value })}
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold mb-1">Timeline</label>
+                <input
+                  type="text"
+                  value={editedGoal.timeline}
+                  onChange={e => setEditedGoal({ ...editedGoal, timeline: e.target.value })}
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold mb-1">Motivator</label>
+                <textarea
+                  value={editedGoal.motivator}
+                  onChange={e => setEditedGoal({ ...editedGoal, motivator: e.target.value })}
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEditedGoal}
+                className="bg-[#4296F7] hover:bg-[#2f7de0] text-white px-4 py-2 rounded"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* New Habit Input */}
       <div className="bg-white p-6 rounded-2xl shadow-lg">
         <h3 className="text-xl font-semibold mb-4">Add a New Habit</h3>
@@ -718,7 +778,8 @@ export default function DashboardPage() {
                 key={habit.id}
                 onClick={() => toggleCompletion(habit.id)}
                 className={`
-                  relative p-5 rounded-2xl shadow-lg cursor-pointer transition-transform duration-150 active:scale-95
+                  relative p-5 rounded-2xl shadow-lg cursor-pointer
+                  transition-transform duration-150 active:scale-95
                   ${isCompleted
                     ? 'bg-green-50 border border-green-300'
                     : 'bg-white border border-gray-200'}
@@ -764,7 +825,6 @@ export default function DashboardPage() {
                   )}
                 </div>
 
-                {/* Edit mode vs display mode */}
                 {habit.isEditing ? (
                   <div className="flex flex-col gap-2">
                     <input
@@ -803,18 +863,30 @@ export default function DashboardPage() {
                         {getCurrentStreak(habit.id) === 1 ? 'day' : 'days'}
                       </div>
                     )}
-                    {/* Weekly dots */}
-                    <div className="flex gap-1">
-                      {weekDays.map(date => (
-                        <div
-                          key={date}
-                          className={`w-3 h-3 rounded-full ${
-                            isHabitCompletedOn(habit.id, date)
-                              ? 'bg-green-400'
-                              : 'bg-gray-300'
-                          }`}
-                        />
-                      ))}
+
+                    {/* Weekly Tracker */}
+                    <div className="mt-3">
+                      {/* Weekday labels */}
+                      <div className="flex gap-1 text-[10px] text-gray-500 mb-1">
+                        {weekDayLabels.map((label, idx) => (
+                          <span key={idx} className="w-3 text-center">
+                            {label}
+                          </span>
+                        ))}
+                      </div>
+                      {/* Weekday circles */}
+                      <div className="flex gap-1">
+                        {weekDays.map(date => (
+                          <div
+                            key={date}
+                            className={`w-3 h-3 rounded-full transition-colors ${
+                              isHabitCompletedOn(habit.id, date)
+                                ? 'bg-green-400'
+                                : 'bg-gray-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </>
                 )}
@@ -826,7 +898,14 @@ export default function DashboardPage() {
 
       {/* Mobile Nav */}
       <MobileNavBar />
+
+      {/* Loading Overlay while regenerating habits */}
+      {isRegeneratingHabits && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-50">
+          <div className="loader mb-4"></div>
+          <p className="text-white text-lg font-semibold">Regenerating habits...</p>
+        </div>
+      )}
     </div>
   )
-
 }
