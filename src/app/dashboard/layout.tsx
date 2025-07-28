@@ -8,18 +8,15 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: 'auto', backgroundColor: 'white' }}>
-      <header
-        className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 shadow-sm border-b border-[#DDE3EB] rounded-t-lg"
-        style={{ backgroundColor: '#4296F7', color: '#FFFFFF' }}
-      >
-        <h1 className="text-4xl font-extrabold tracking-tight text-center sm:text-left">
-          DayOne Dashboard
-        </h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
+      <header className="bg-white shadow-md rounded-b-3xl px-8 py-6 mb-8">
+        <h1 className="text-4xl font-extrabold text-[#4296F7]">DayOne Dashboard</h1>
       </header>
-      <main>{children}</main>
+
+      <main className="max-w-5xl mx-auto px-4 space-y-8">
+        {children}
+      </main>
     </div>
   )
 }

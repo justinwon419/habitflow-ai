@@ -594,366 +594,239 @@ export default function DashboardPage() {
 
   {/* JSX RETURN BLOCK */}
   return (
-    <div className="min-h-screen bg-gray-100 p-4 w-full max-w-screen-md mx-auto">
-      {/* Goal Card */}
-      {activeGoal && (
-        <div className="bg-white p-4 rounded-lg shadow mb-4 relative">
-
-          {/* Top-right circular progress */}
-          <div className="absolute top-4 right-4">
-            <GoalProgressCircle
-              createdAt={activeGoal.created_at}
-              timeline={activeGoal.timeline}
-            />
-          </div>
-
-          {/* Text content with padding to avoid overlapping the circle */}
-          <div className="pr-24">
-            <h2 className="text-lg font-bold mb-2">
-              Current Goal: {activeGoal.goal_title}
-            </h2>
-            <p><strong>Description:</strong> {activeGoal.description}</p>
-            <p><strong>Timeline:</strong> {activeGoal.timeline}</p>
-            <p><strong>Motivator:</strong> {activeGoal.motivator}</p>
-          </div>
-          {/* Bottom-right Edit button (mobile full-width, desktop right-aligned) */}
-          <div className="mt-4 flex justify-end">
+    <div className="space-y-8">
+      {/* Top cards: Current Goal & Goal Streak */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Current Goal */}
+        {activeGoal && (
+          <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col">
+            <h2 className="text-2xl font-bold mb-2">{activeGoal.goal_title}</h2>
+            <p className="text-gray-700 mb-1">
+              <strong>Description:</strong> {activeGoal.description}
+            </p>
+            <p className="text-gray-700 mb-1">
+              <strong>Timeline:</strong> {activeGoal.timeline}
+            </p>
+            <p className="text-gray-700 mb-4">
+              <strong>Motivator:</strong> {activeGoal.motivator}
+            </p>
             <button
-              className="text-base bg-[#4296F7] hover:bg-[#2f7de0] text-white px-2 py-1 rounded transition-colors duration-200 w-full sm:w-auto"
               onClick={() => {
                 setEditedGoal(activeGoal)
                 setIsModalOpen(true)
               }}
+              className="mt-auto bg-[#4296F7] hover:bg-[#2f7de0] text-white py-2 px-4 rounded-lg transition"
             >
               Edit Goal
             </button>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="bg-white p-4 rounded-lg shadow mb-4">
-          <h3 className="text-lg font-semibold">Goal Streak</h3>
-          <p className="mt-2 text-3xl font-bold">
-            {goalStreak} day{goalStreak !== 1 && 's'}
-          </p>
-          <p className="text-sm text-gray-500">
-            Complete at least 80% of your habits each day to keep your streak going.
-          </p>
-        </div>
-
-      {/* Temporary button for weekly report modal (comment out) */}
-      {/* <button
-        onClick={() => {
-          const event = new Event('forceWeeklyReport');
-          window.dispatchEvent(event);
-        }}
-        className="fixed bottom-20 right-4 bg-blue-500 text-white px-4 py-2 rounded shadow-lg"
-      >
-        🔁 Force Weekly Report
-      </button> */}
+        {/* Goal Streak (with progress circle) */}
+        {activeGoal &&(
+          <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col justify-between relative">
+            <h3 className="text-2xl font-semibold">Goal Streak & Progress</h3>
+            <p className="mt-4 text-5xl font-bold">
+              🔥 {goalStreak}
+              <span className="text-xl font-medium">
+                {goalStreak === 1 ? ' day' : ' days'} 
+              </span>
+            </p>
+            <div className="absolute top-6 right-6">
+              <GoalProgressCircle
+                createdAt={activeGoal?.created_at!}
+                timeline={activeGoal?.timeline!}
+              />
+            </div>
+            <p className="mt-2 text-gray-500">
+              Complete at least 80% of your habits each day to keep it going.
+            </p>
+          </div>
+        )}
+        
+      </div>
 
       {/* Weekly Report Modal */}
       {showWeeklyModal && weeklyReport && nextWeekMessage && (
         <WeeklyReportModal
           onClose={async () => {
-            console.log('Modal closed')
             setShowWeeklyModal(false)
-            
             if (difficultyOverride && session?.user) {
-              console.log('Saving difficulty override:', difficultyOverride)
-              try {
-                await saveDifficultyOverride(
-                  supabase,
-                  session.user.id,
-                  difficultyOverride
-                )
-              } catch (error) {
-                console.error('Failed to persist difficulty choice', error)
-              }
+              await saveDifficultyOverride(
+                supabase,
+                session.user.id,
+                difficultyOverride
+              )
             }
           }}
           stats={weeklyStats}
           summary={weeklyReport}
           nextWeekMessage={nextWeekMessage}
-          onDifficultySelect={(choice) => {
-            console.log('Difficulty override selected:', choice)
-            setDifficultyOverride(choice)
-          }}
+          onDifficultySelect={setDifficultyOverride}
         />
       )}
 
-      {/* Goal Edit Modal */}
-      {isModalOpen && editedGoal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full border-t-16 border-[#4296F7]">
-            <h2 className="text-3xl font-bold mb-4 text-[#4296F7]">Edit Goal</h2>
-
-
-            <div className="mb-4">
-              <label className="block font-semibold mb-1">Title</label>
-              <input
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                value={editedGoal.goal_title}
-                onChange={e => setEditedGoal({ ...editedGoal, goal_title: e.target.value })}
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="block font-semibold mb-1">Description</label>
-              <input
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                value={editedGoal.description}
-                onChange={e => setEditedGoal({ ...editedGoal, description: e.target.value })}
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="block font-semibold mb-1">Timeline</label>
-              <input
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                value={editedGoal.timeline}
-                onChange={e => setEditedGoal({ ...editedGoal, timeline: e.target.value })}
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="block font-semibold mb-1">Motivator</label>
-              <textarea
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                value={editedGoal.motivator}
-                onChange={e => setEditedGoal({ ...editedGoal, motivator: e.target.value })}
-              />
-            </div>
-
-            <div className="flex justify-between">
-              <button
-                className="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded"
-                onClick={() => setIsModalOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="bg-[#4296F7] hover:bg-[#2f7de0] text-white px-2 py-1 rounded transition-colors duration-200"
-                onClick={handleSaveEditedGoal}
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Loading Overlay: show only when regenerating new AI-Goals */}
-      {isRegeneratingHabits && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-50">
-          <div className="loader"></div>
-          <p className="text-white text-lg font-semibold">Regenerating habits...</p>
-        </div>
-      )}
-
       {/* New Habit Input */}
-      <header className="bg-white p-4 rounded-lg shadow mb-4 mt-4">
-        <h1 className="font-bold text-base mb-2">New Habit</h1>
-        <div className="flex flex-col sm:flex-row gap-2">
+      <div className="bg-white p-6 rounded-2xl shadow-lg">
+        <h3 className="text-xl font-semibold mb-4">Add a New Habit</h3>
+        <div className="flex flex-col sm:flex-row gap-3">
           <input
             type="text"
-            placeholder="Enter a brief habit description"
+            placeholder="Brief habit description"
             value={newHabitTitle}
             onChange={e => setNewHabitTitle(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none"
           />
           <button
             onClick={addHabit}
-            className="bg-[#4296F7] hover:bg-[#2f7de0] text-white px-4 py-2 rounded transition-colors duration-200"
+            className="bg-[#4296F7] hover:bg-[#2f7de0] text-white py-2 px-6 rounded-lg transition"
           >
-            Add Habit
+            Add
           </button>
         </div>
-      </header>
+      </div>
 
-      <hr className="my-4 border-t border-black" />
-      
-      {/* Daily Progress Bar */}
+      {/* Daily Progress */}
       {habits.length > 0 && (
-        <div className="bg-white p-4 rounded-lg shadow mb-4 mt-4">
-          <h3 className="font-semibold mb-2">Daily Progress</h3>
+        <div className="bg-white p-6 rounded-2xl shadow-lg">
+          <h3 className="text-xl font-semibold mb-2">Daily Progress</h3>
           <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
             <div
               className="h-full bg-[#367BDB] transition-all duration-500"
               style={{ width: `${completionPercentage}%` }}
             />
           </div>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="mt-2 text-gray-600">
             {Math.round(completionPercentage)}% complete
           </p>
         </div>
       )}
 
-      {/* Habits Section */}
+      {/* Habits Grid */}
       {loading ? (
-        <p className="p-4">Loading...</p>
+        <p className="text-center">Loading…</p>
       ) : habits.length === 0 ? (
-        <p className="p-4">You have no habits yet.</p>
+        <p className="text-center">You have no habits yet.</p>
       ) : (
-        <ul className="space-y-4 mt-4">
-          {habits.map((habit) => {
+        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {habits.map(habit => {
             const isCompleted = isHabitCompletedOn(habit.id, today)
             const isMenuOpen = openMenuId === habit.id
 
             return (
               <li
                 key={habit.id}
-                className={`hover:bg-[#DDEFFF] p-4 rounded-lg shadow border border-gray-100 transition-all duration-200 transform ${
-                  isCompleted ? 'bg-green-100 hover:bg-green-100' : 'bg-white'
-                } active:scale-95 relative`}
-                onClick={(e) => {
-                  if (!habit.isEditing && !(e.target as HTMLElement).closest('.habit-menu')) {
-                    toggleCompletion(habit.id)
-                  }
-                }}
-                onTouchStart={(e) => {
-                  if (!habit.isEditing) {
-                    const target = e.currentTarget as HTMLElement & {
-                      _timeoutId?: ReturnType<typeof setTimeout>
-                    }
-                    target._timeoutId = setTimeout(() => {
-                      startEdit(habit.id)
-                    }, 600)
-                  }
-                }}
-                onTouchEnd={(e) => {
-                  const target = e.currentTarget as HTMLElement & {
-                    _timeoutId?: ReturnType<typeof setTimeout>
-                  }
-                  if (target._timeoutId) {
-                    clearTimeout(target._timeoutId)
-                  }
-                }}
+                onClick={() => toggleCompletion(habit.id)}
+                className={`
+                  relative p-5 rounded-2xl shadow-lg cursor-pointer transition-transform duration-150 active:scale-95
+                  ${isCompleted
+                    ? 'bg-green-50 border border-green-300'
+                    : 'bg-white border border-gray-200'}
+                `}
               >
+                {/* Ellipsis menu */}
+                <div
+                  className="absolute top-3 right-3 habit-menu"
+                  ref={isMenuOpen ? menuRef : null}
+                >
+                  <button
+                    onClick={e => {
+                      e.stopPropagation()
+                      setOpenMenuId(prev => (prev === habit.id ? null : habit.id))
+                    }}
+                    className="text-gray-500 hover:bg-gray-200 p-1 rounded"
+                  >
+                    ⋯
+                  </button>
+                  {isMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-28 bg-white border border-gray-200 rounded shadow-lg z-10">
+                      <button
+                        onClick={e => {
+                          e.stopPropagation()
+                          setOpenMenuId(null)
+                          startEdit(habit.id)
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={e => {
+                          e.stopPropagation()
+                          setOpenMenuId(null)
+                          if (confirm('Delete this habit?')) deleteHabit(habit.id)
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Edit mode vs display mode */}
                 {habit.isEditing ? (
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full">
+                  <div className="flex flex-col gap-2">
                     <input
                       type="text"
                       value={habit.editTitle}
-                      onChange={(e) => {
+                      onChange={e => {
                         const newTitle = e.target.value
-                        setHabits(
-                          habits.map((h) =>
-                            h.id === habit.id ? { ...h, editTitle: newTitle } : h
-                          )
-                        )
+                        setHabits(habits.map(h =>
+                          h.id === habit.id ? { ...h, editTitle: newTitle } : h
+                        ))
                       }}
-                      className="flex-grow px-3 py-2 border border-gray-300 rounded"
+                      className="px-3 py-2 border border-gray-300 rounded"
                     />
                     <div className="flex gap-2">
                       <button
                         onClick={() => saveHabit(habit.id)}
-                        className="px-3 py-2 bg-[#367BDB] text-white rounded hover:bg-blue-600 transition"
+                        className="flex-1 bg-[#4296F7] text-white py-1 rounded hover:bg-[#2f7de0]"
                       >
                         Save
                       </button>
                       <button
                         onClick={() => cancelEdit(habit.id)}
-                        className="px-3 py-2 bg-gray-200 text-red-600 rounded hover:bg-gray-300 transition"
+                        className="flex-1 bg-gray-200 text-gray-700 py-1 rounded hover:bg-gray-300"
                       >
                         Cancel
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="flex-grow">
-                      <div className="font-semibold text-base">{habit.title}</div>
-                      {getCurrentStreak(habit.id) > 0 && (
-                        <div className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                          <span>🔥</span>
-                          <span>
-                            Streak: {getCurrentStreak(habit.id)} day
-                            {getCurrentStreak(habit.id) !== 1 && 's'}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Weekly Tracker */}
-                      <div className="mt-3 w-fit">
-                        <div className="flex justify-center gap-1 text-[10px] text-gray-500">
-                          {weekDayLabels.map((label, idx) => (
-                            <span
-                              key={idx}
-                              className="w-4 text-center leading-tight"
-                            >
-                              {label}
-                            </span>
-                          ))}
-                        </div>
-                        <div className="flex justify-center gap-1 mt-1">
-                          {weekDays.map((date) => (
-                            <div
-                              key={date}
-                              className="w-4 h-4 rounded-full"
-                              style={{
-                                backgroundColor: isHabitCompletedOn(habit.id, date)
-                                  ? 'green'
-                                  : '#F0F0F0',
-                                border:
-                                  date === today ? '2px solid #367BDB' : '1px solid #ccc',
-                              }}
-                            />
-                          ))}
-                        </div>
+                  <>
+                    <div className="font-semibold text-lg mb-2">{habit.title}</div>
+                    {getCurrentStreak(habit.id) > 0 && (
+                      <div className="flex items-center text-sm text-gray-600 mb-2">
+                        <span className="mr-1">🔥</span>
+                        Streak: {getCurrentStreak(habit.id)}{' '}
+                        {getCurrentStreak(habit.id) === 1 ? 'day' : 'days'}
                       </div>
+                    )}
+                    {/* Weekly dots */}
+                    <div className="flex gap-1">
+                      {weekDays.map(date => (
+                        <div
+                          key={date}
+                          className={`w-3 h-3 rounded-full ${
+                            isHabitCompletedOn(habit.id, date)
+                              ? 'bg-green-400'
+                              : 'bg-gray-300'
+                          }`}
+                        />
+                      ))}
                     </div>
-
-                    {/* Ellipsis Dropdown */}
-                    <div
-                      className="habit-menu relative"
-                      ref={isMenuOpen ? menuRef : null}
-                    >
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setOpenMenuId((prev) =>
-                            prev === habit.id ? null : habit.id
-                          )
-                        }}
-                        className="text-gray-500 text-xl px-2 rounded hover:bg-gray-200"
-                      >
-                        ⋯
-                      </button>
-                      {isMenuOpen && (
-                        <div className="absolute right-0 mt-2 w-28 bg-white border border-gray-200 rounded shadow-lg z-10">
-                          <button
-                            onClick={() => {
-                              setOpenMenuId(null)
-                              startEdit(habit.id)
-                            }}
-                            className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => {
-                              setOpenMenuId(null)
-                              if (window.confirm('Delete this habit?')) {
-                                deleteHabit(habit.id)
-                              }
-                            }}
-                            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  </>
                 )}
               </li>
             )
           })}
         </ul>
       )}
-      {/* Navigation Bar */}
-      <MobileNavBar/>
+
+      {/* Mobile Nav */}
+      <MobileNavBar />
     </div>
   )
+
 }
