@@ -4,8 +4,8 @@ import { usePathname } from 'next/navigation'
 import {
   HomeIcon,
   ClipboardIcon,
-  PlusCircleIcon,
-  BellIcon,
+  //PlusCircleIcon,
+  //BellIcon,
   UserIcon,
 } from '@heroicons/react/24/outline'
 
