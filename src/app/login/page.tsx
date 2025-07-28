@@ -1,3 +1,4 @@
+// app/login/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const supabaseClient = createClientComponentClient<Database>()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [isSignup, setIsSignup] = useState(false)
   const [showReset, setShowReset] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -20,170 +22,161 @@ export default function LoginPage() {
 
   useEffect(() => {
     supabaseClient.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        router.replace('/dashboard')
-      }
+      if (data.session) router.replace('/dashboard')
     })
   }, [router, supabaseClient.auth])
 
   const handleOAuthLogin = async (provider: 'github' | 'google') => {
-    const origin = location.origin
-
+    const origin = window.location.origin
     const { error } = await supabaseClient.auth.signInWithOAuth({
       provider,
-      options: {
-        redirectTo: `${origin}/auth/callback`,
-      },
+      options: { redirectTo: `${origin}/auth/callback` },
     })
-
     if (error) setError(error.message)
   }
 
   const handleEmailAuth = async () => {
     setError(null)
     setMessage(null)
-
-    if (!email || !password) {
-      setError('Please enter email and password')
+    // Basic validation
+    if (!email) {
+      setError('Please enter your email')
       return
     }
-
+    if (showReset) {
+      // Password reset flow
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+      if (error) setError(error.message)
+      else setMessage('Check your email for reset link')
+      return
+    }
+    // Signup/Login flow
+    if (!password) {
+      setError('Please enter your password')
+      return
+    }
     if (isSignup) {
+      if (!confirmPassword) {
+        setError('Please confirm your password')
+        return
+      }
+      if (password !== confirmPassword) {
+        setError('Passwords do not match')
+        return
+      }
+      // Sign up
       const { error } = await supabaseClient.auth.signUp({ email, password })
       if (error) setError(error.message)
-      else setMessage('Check your inbox to confirm your email')
+      else setMessage('Check your inbox to confirm email')
     } else {
+      // Login
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password })
       if (error) {
         setError(error.message)
       } else {
-        const user = data.user
-        if (user) {
-          const { data: goals } = await supabaseClient
-            .from('goals')
-            .select('*')
-            .eq('user_id', user.id)
-            .limit(1)
-
-          router.push(goals && goals.length > 0 ? '/dashboard' : '/goals/new')
-        }
+        const { data: goals } = await supabaseClient
+          .from('goals')
+          .select('id')
+          .eq('user_id', data.user.id)
+          .limit(1)
+        router.push(goals && goals.length > 0 ? '/dashboard' : '/goals/new')
       }
     }
   }
 
-  const handlePasswordReset = async () => {
-    setError(null)
-    setMessage(null)
-
-    if (!email) {
-      setError('Enter your email to receive a reset link')
-      return
-    }
-
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: `${location.origin}/reset-password`,
-    })
-
-    if (error) setError(error.message)
-    else setMessage('Check your email for the password reset link')
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0E0E0E] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 to-black px-4">
       <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="w-full max-w-sm bg-[#1F1F1F] shadow-2xl rounded-2xl p-8 border border-[#2C2C2C]"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="relative w-full max-w-md bg-gray-800/50 backdrop-blur-md rounded-2xl border border-gray-700 shadow-xl p-10"
       >
-        <h1 className="text-2xl font-bold text-center text-[#1C86FF] mb-6">
-          Welcome to DayOne
+        <h1 className="text-4xl font-extrabold text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600 mb-8">
+          {isSignup ? 'Create Your Account' : 'Welcome Back'}
         </h1>
 
+        {/* OAuth Buttons */}
         <div className="space-y-4">
           <button
             onClick={() => handleOAuthLogin('google')}
-            className="w-full flex items-center justify-center gap-2 bg-white text-black border border-gray-300 rounded-lg py-2 px-4 hover:bg-gray-100 transition"
+            className="w-full flex items-center justify-center gap-3 bg-white text-black rounded-lg py-2 hover:bg-gray-100 transition"
           >
-            <FcGoogle className="w-5 h-5" />
-            Sign in with Google
+            <FcGoogle className="w-6 h-6" />
+            Continue with Google
           </button>
-
           <button
             onClick={() => handleOAuthLogin('github')}
-            className="w-full flex items-center justify-center gap-2 bg-black text-white rounded-lg py-2 px-4 hover:bg-gray-900 transition"
+            className="w-full flex items-center justify-center gap-3 bg-gray-900 text-white rounded-lg py-2 hover:bg-gray-800 transition"
           >
-            <Github className="w-5 h-5" />
-            Sign in with GitHub
+            <Github className="w-6 h-6" />
+            Continue with GitHub
           </button>
         </div>
 
-        <div className="mt-6 border-t border-[#333] pt-6">
+        {/* Divider */}
+        <div className="flex items-center my-6">
+          <span className="flex-grow border-t border-gray-600"></span>
+          <span className="mx-3 text-gray-400">or</span>
+          <span className="flex-grow border-t border-gray-600"></span>
+        </div>
+
+        {/* Email Form */}
+        <div className="space-y-4">
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            className="w-full px-4 py-2 mb-3 border border-[#333] rounded-md bg-[#1F1F1F] text-white placeholder-[#717C89] focus:outline-none focus:ring-2 focus:ring-[#1C86FF]"
+            className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           {!showReset && (
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full px-4 py-2 mb-4 border border-[#333] rounded-md bg-[#1F1F1F] text-white placeholder-[#717C89] focus:outline-none focus:ring-2 focus:ring-[#1C86FF]"
-            />
-          )}
-
-          {error && <p className="text-sm text-red-500 mb-3 text-center">{error}</p>}
-          {message && <p className="text-sm text-green-400 mb-3 text-center">{message}</p>}
-
-          {showReset ? (
             <>
-              <button
-                onClick={handlePasswordReset}
-                className="w-full bg-[#1C86FF] text-white py-2 rounded-lg hover:bg-[#409EFF] transition"
-              >
-                Send reset link
-              </button>
-              <p className="text-center text-sm mt-4">
-                <button
-                  onClick={() => setShowReset(false)}
-                  className="text-[#89C6FF] hover:underline font-medium"
-                >
-                  Back to login
-                </button>
-              </p>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={handleEmailAuth}
-                className="w-full bg-[#1C86FF] text-white py-2 rounded-lg hover:bg-[#409EFF] transition"
-              >
-                {isSignup ? 'Sign up with Email' : 'Log in with Email'}
-              </button>
-
-              <p className="text-center text-sm mt-4 text-[#B0B6BF]">
-                {isSignup ? 'Already have an account?' : 'Need an account?'}{' '}
-                <button
-                  onClick={() => setIsSignup(!isSignup)}
-                  className="text-[#89C6FF] hover:underline font-medium"
-                >
-                  {isSignup ? 'Log in' : 'Sign up'}
-                </button>
-              </p>
-
-              {!isSignup && (
-                <p className="text-sm mt-4 text-center text-[#717C89]">
-                  <a href="/forgot-password" className="text-[#89C6FF] hover:underline">
-                    Forgot your password?
-                  </a>
-                </p>
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {isSignup && (
+                <input
+                  type="password"
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               )}
             </>
           )}
+
+          {error && <p className="text-sm text-red-400 text-center">{error}</p>}
+          {message && <p className="text-sm text-green-400 text-center">{message}</p>}
+
+          <button
+            onClick={handleEmailAuth}
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-3 rounded-lg hover:from-blue-600 hover:to-purple-600 transition"
+          >
+            {showReset
+              ? 'Send Reset Link'
+              : isSignup
+              ? 'Sign Up with Email'
+              : 'Log In with Email'}
+          </button>
+
+          <div className="flex justify-between text-sm text-gray-400 mt-2">
+            <button onClick={() => setIsSignup(!isSignup)} className="hover:text-white">
+              {isSignup ? 'Have an account? Log In' : 'New user? Sign Up'}
+            </button>
+            {!isSignup && (
+              <button onClick={() => setShowReset(!showReset)} className="hover:text-white">
+                {showReset ? 'Back to Login' : 'Forgot Password?'}
+              </button>
+            )}
+          </div>
         </div>
       </motion.div>
     </div>
