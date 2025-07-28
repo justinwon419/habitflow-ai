@@ -3,7 +3,6 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { format } from 'date-fns'
 import AddLogForm from '@/components/AddLogForm'
-import LogList from '@/components/LogList'
 import MobileNavBar from '@/components/MobileNavBar'
 import { quotes, authors } from '@/lib/quotes'
 
