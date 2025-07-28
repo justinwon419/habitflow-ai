@@ -52,34 +52,6 @@ export default function MobileNavBar() {
           Logs
         </Link>
 
-        {/* Center "+" Button */}
-        <Link
-          href="/add"
-          aria-label="Add Log"
-          className="absolute bg-blue-500 text-white rounded-full p-4 shadow-lg hover:bg-blue-600 active:scale-90 transition transform duration-150"
-          style={{
-            bottom: 'calc(env(safe-area-inset-bottom, 1.5rem))',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 10,
-          }}
-        >
-          <PlusCircleIcon className="h-8 w-8" />
-        </Link>
-
-        {/* Notifications */}
-        <Link
-          href="/notifications"
-          aria-current={pathname === '/notifications' ? 'page' : undefined}
-          aria-label="Notifications"
-          className={`flex flex-col items-center text-xs transition transform duration-150 ${
-            pathname === '/notifications' ? 'text-blue-600' : 'text-gray-500'
-          } hover:text-blue-600 active:scale-85`}
-        >
-          <BellIcon className="h-6 w-6" />
-          Alerts
-        </Link>
-
         {/* Profile */}
         <Link
           href="/profile"
@@ -96,3 +68,32 @@ export default function MobileNavBar() {
     </nav>
   )
 }
+
+//These are reserved for future features beyond MVP. Will add these back eventually
+    // {/* Center "+" Button */}
+    // <Link
+    //     href="/add"
+    //     aria-label="Add Log"
+    //     className="absolute bg-blue-500 text-white rounded-full p-4 shadow-lg hover:bg-blue-600 active:scale-90 transition transform duration-150"
+    //     style={{
+    //     bottom: 'calc(env(safe-area-inset-bottom, 1.5rem))',
+    //     left: '50%',
+    //     transform: 'translateX(-50%)',
+    //     zIndex: 10,
+    //     }}
+    // >
+    //     <PlusCircleIcon className="h-8 w-8" />
+    // </Link>
+
+    // {/* Notifications */}
+    // <Link
+    //     href="/notifications"
+    //     aria-current={pathname === '/notifications' ? 'page' : undefined}
+    //     aria-label="Notifications"
+    //     className={`flex flex-col items-center text-xs transition transform duration-150 ${
+    //     pathname === '/notifications' ? 'text-blue-600' : 'text-gray-500'
+    //     } hover:text-blue-600 active:scale-85`}
+    // >
+    //     <BellIcon className="h-6 w-6" />
+    //     Alerts
+    // </Link>

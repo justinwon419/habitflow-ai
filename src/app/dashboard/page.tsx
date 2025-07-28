@@ -213,7 +213,9 @@ export default function DashboardPage() {
           setNextWeekMessage(nextWeekMessage)
           setShowWeeklyModal(true)
 
-          const { error: statsError } = await supabase.from('weekly_stats').insert([
+          const { error: statsError } = await supabase
+            .from('weekly_stats')
+            .upsert([
             {
               user_id: session.user.id,
               week_start: startOfWeek(now, { weekStartsOn: 0 }).toISOString(),
@@ -222,12 +224,12 @@ export default function DashboardPage() {
               summary: data.summary,
               created_at: new Date().toISOString(),
             },
-          ])
-
+          ],
+          {onConflict: 'user_id,week_start'},
+        )
           if (statsError) {
             console.warn('Failed to save weekly stats:', statsError.message)
           }
-
           console.log('Weekly modal set to show ✅')
         } else {
           console.error('Failed to generate summary:', data.error)
@@ -625,7 +627,7 @@ export default function DashboardPage() {
         {/* Goal Streak (with progress circle) */}
         {activeGoal &&(
           <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col justify-between relative">
-            <h3 className="text-2xl font-semibold">Goal Streak & Progress</h3>
+            <h3 className="text-2xl font-semibold">Goal Streak</h3>
             <p className="mt-4 text-5xl font-bold">
               🔥 {goalStreak}
               <span className="text-xl font-medium">

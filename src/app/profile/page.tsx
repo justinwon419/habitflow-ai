@@ -176,9 +176,12 @@ export default function ProfilePage() {
         <section className="bg-white rounded-xl shadow p-6 mb-12">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Settings & Support</h2>
           <ul className="space-y-3 text-blue-600">
-            <li><a href="/settings" className="hover:underline">Edit Profile</a></li>
+            <li><a className="hover:underline">Edit Profile (not ready yet)</a></li>
+            <li><a className="hover:underline">Help & Support (not ready yet)</a></li>
+            <li><a className="hover:underline">Terms & Privacy (not ready yet)</a></li>
+            {/*<li><a href="/settings" className="hover:underline">Edit Profile</a></li>
             <li><a href="/help" className="hover:underline">Help & Support</a></li>
-            <li><a href="/terms" className="hover:underline">Terms & Privacy</a></li>
+            <li><a href="/terms" className="hover:underline">Terms & Privacy</a></li>*/}
           </ul>
         </section>
 
