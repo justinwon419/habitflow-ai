@@ -634,8 +634,8 @@ export default function DashboardPage() {
             </p>
             <div className="absolute top-6 right-6">
               <GoalProgressCircle
-                createdAt={activeGoal?.created_at!}
-                timeline={activeGoal?.timeline!}
+                createdAt={activeGoal.created_at}
+                timeline={activeGoal.timeline}
               />
             </div>
             <p className="mt-2 text-gray-500">

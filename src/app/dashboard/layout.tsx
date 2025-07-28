@@ -10,11 +10,11 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
-      <header className="bg-white shadow-md rounded-b-3xl px-8 py-6 mb-8">
-        <h1 className="text-4xl font-extrabold text-[#4296F7]">DayOne Dashboard</h1>
+      <header className="flex items-center justify-center h-24 bg-gradient-to-r from-blue-400 to-purple-600 relative">
+        <h1 className="text-center text-4xl font-extrabold text-[#FFFFFF]">DayOne Dashboard</h1>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 space-y-8">
+      <main className="max-w-5xl mx-auto px-4 space-y-8 pb-24">
         {children}
       </main>
     </div>
